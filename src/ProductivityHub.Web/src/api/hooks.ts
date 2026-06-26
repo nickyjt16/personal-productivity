@@ -275,6 +275,30 @@ export function useDeleteProject() {
   })
 }
 
+// ---------- Search ----------
+export interface SearchHit {
+  type: 'todo' | 'note' | 'bookmark'
+  id: string
+  title: string
+  subtitle: string | null
+  url: string | null
+}
+export interface SearchResults {
+  query: string
+  todos: SearchHit[]
+  notes: SearchHit[]
+  bookmarks: SearchHit[]
+}
+
+export function useSearch(query: string) {
+  const q = query.trim()
+  return useQuery({
+    queryKey: ['search', q],
+    queryFn: () => api.get<SearchResults>(`/api/search${qs({ q })}`),
+    enabled: q.length > 0,
+  })
+}
+
 // ---------- Data ----------
 export function useClearAllData() {
   const qc = useQueryClient()

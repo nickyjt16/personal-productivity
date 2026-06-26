@@ -1,4 +1,5 @@
-import { NavLink, Route, Routes } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
 import Todos from './pages/Todos'
 import Inbox from './pages/Inbox'
@@ -6,6 +7,7 @@ import Bookmarks from './pages/Bookmarks'
 import Notes from './pages/Notes'
 import Journal from './pages/Journal'
 import Projects from './pages/Projects'
+import Search from './pages/Search'
 import Settings from './pages/Settings'
 import { SECTIONS, useSettings } from './settings'
 
@@ -18,7 +20,8 @@ export default function App() {
   return (
     <div className="d-flex min-vh-100">
       <aside className="bg-dark text-white p-3 d-flex flex-column" style={{ width: 220 }}>
-        <h1 className="h5 mb-4">⚡ Productivity Hub</h1>
+        <h1 className="h5 mb-3">⚡ Productivity Hub</h1>
+        <SearchBox />
         <nav className="nav nav-pills flex-column gap-1">
           <NavItem to="/" icon="🏠" label="Dashboard" end />
           {sectionLinks.map((s) => (
@@ -39,11 +42,23 @@ export default function App() {
             <Route path="/notes" element={<Notes />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/search" element={<Search />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
       </main>
     </div>
+  )
+}
+
+function SearchBox() {
+  const [q, setQ] = useState('')
+  const navigate = useNavigate()
+  return (
+    <form className="mb-3" onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`) }}>
+      <input className="form-control form-control-sm" type="search" placeholder="🔎 Search…"
+        value={q} onChange={(e) => setQ(e.target.value)} />
+    </form>
   )
 }
 
