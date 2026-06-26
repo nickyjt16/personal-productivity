@@ -1,0 +1,163 @@
+import { useState } from 'react'
+import {
+  useCreateTodo,
+  useDeleteTodo,
+  useTodos,
+  useToggleTodo,
+  useUpdateTodo,
+} from '../api/hooks'
+import type { Priority, Todo } from '../api/types'
+
+const priorities: Priority[] = ['Low', 'Medium', 'High']
+const priorityVariant: Record<Priority, string> = { Low: 'secondary', Medium: 'info', High: 'danger' }
+
+// Convert an ISO timestamp to the yyyy-MM-dd value a <input type="date"> expects.
+function toDateInput(iso: string | null): string {
+  return iso ? iso.slice(0, 10) : ''
+}
+
+export default function Todos() {
+  const { data: todos = [], isLoading } = useTodos()
+  const create = useCreateTodo()
+  const toggle = useToggleTodo()
+  const remove = useDeleteTodo()
+
+  const [title, setTitle] = useState('')
+  const [priority, setPriority] = useState<Priority>('Medium')
+  const [dueDate, setDueDate] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  function add(e: React.FormEvent) {
+    e.preventDefault()
+    if (!title.trim()) return
+    create.mutate(
+      { title: title.trim(), priority, dueDate: dueDate || undefined },
+      { onSuccess: () => { setTitle(''); setDueDate('') } },
+    )
+  }
+
+  return (
+    <div>
+      <h2 className="mb-4">✅ Todos</h2>
+
+      <form className="card card-body mb-4" onSubmit={add}>
+        <div className="row g-2 align-items-end">
+          <div className="col">
+            <label className="form-label">Task</label>
+            <input className="form-control" value={title} placeholder="What needs doing?"
+              onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="col-auto">
+            <label className="form-label">Priority</label>
+            <select className="form-select" value={priority}
+              onChange={(e) => setPriority(e.target.value as Priority)}>
+              {priorities.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+          <div className="col-auto">
+            <label className="form-label">Due</label>
+            <input type="date" className="form-control" value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          <div className="col-auto">
+            <button className="btn btn-primary" disabled={create.isPending}>Add</button>
+          </div>
+        </div>
+      </form>
+
+      {isLoading ? <p>Loading…</p> : todos.length === 0 ? (
+        <p className="text-muted">No tasks yet. Add one above.</p>
+      ) : (
+        <ul className="list-group">
+          {todos.map((t) => (
+            <li key={t.id} className="list-group-item">
+              {editingId === t.id ? (
+                <EditRow todo={t} onClose={() => setEditingId(null)} />
+              ) : (
+                <div className="d-flex align-items-center gap-2">
+                  <input type="checkbox" className="form-check-input mt-0" checked={t.isDone}
+                    onChange={() => toggle.mutate(t.id)} />
+                  <div className="flex-grow-1">
+                    <span className={t.isDone ? 'text-decoration-line-through text-muted' : ''}>
+                      {t.title}
+                    </span>
+                    {t.notes && <div className="small text-muted">{t.notes}</div>}
+                  </div>
+                  <span className={`badge text-bg-${priorityVariant[t.priority]}`}>{t.priority}</span>
+                  {t.dueDate && (
+                    <span className="badge text-bg-light text-muted">
+                      {new Date(t.dueDate).toLocaleDateString()}
+                    </span>
+                  )}
+                  <button className="btn btn-sm btn-outline-secondary" title="Edit"
+                    onClick={() => setEditingId(t.id)}>✎</button>
+                  <button className="btn btn-sm btn-outline-danger" title="Delete"
+                    onClick={() => remove.mutate(t.id)}>✕</button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
+  const update = useUpdateTodo()
+  const [title, setTitle] = useState(todo.title)
+  const [notes, setNotes] = useState(todo.notes ?? '')
+  const [priority, setPriority] = useState<Priority>(todo.priority)
+  const [dueDate, setDueDate] = useState(toDateInput(todo.dueDate))
+
+  function save(e: React.FormEvent) {
+    e.preventDefault()
+    if (!title.trim()) return
+    update.mutate(
+      {
+        id: todo.id,
+        title: title.trim(),
+        notes: notes.trim() || null,
+        priority,
+        isDone: todo.isDone,
+        dueDate: dueDate || null,
+      },
+      { onSuccess: onClose },
+    )
+  }
+
+  return (
+    <form onSubmit={save}>
+      <div className="row g-2 align-items-end">
+        <div className="col-12 col-md">
+          <label className="form-label small">Task</label>
+          <input className="form-control" value={title} autoFocus
+            onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <label className="form-label small">Priority</label>
+          <select className="form-select" value={priority}
+            onChange={(e) => setPriority(e.target.value as Priority)}>
+            {priorities.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </div>
+        <div className="col-auto">
+          <label className="form-label small">Due</label>
+          <input type="date" className="form-control" value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)} />
+        </div>
+      </div>
+      <div className="mt-2">
+        <label className="form-label small">Notes</label>
+        <textarea className="form-control" rows={2} value={notes} placeholder="Optional notes"
+          onChange={(e) => setNotes(e.target.value)} />
+      </div>
+      <div className="d-flex gap-2 mt-2">
+        <button className="btn btn-sm btn-primary" disabled={update.isPending}>Save</button>
+        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  )
+}
