@@ -64,3 +64,6 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+// Exposed so the integration-test project can host the app via WebApplicationFactory.
+public partial class Program { }
