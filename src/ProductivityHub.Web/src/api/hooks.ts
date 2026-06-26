@@ -275,6 +275,15 @@ export function useDeleteProject() {
   })
 }
 
+// ---------- Data ----------
+export function useClearAllData() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.post('/api/data/clear'),
+    onSuccess: () => qc.invalidateQueries(),
+  })
+}
+
 // Set the full set of projects an item belongs to. `kind` is the API route segment.
 export function useSetItemProjects(kind: 'todos' | 'notes' | 'bookmarks') {
   const qc = useQueryClient()
