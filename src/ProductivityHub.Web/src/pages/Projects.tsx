@@ -168,7 +168,7 @@ function ProjectDetail({ project }: { project: Project }) {
             <button className="btn btn-sm btn-success" onClick={() => setStatus('Complete')}>Mark complete</button>
           )}
           {project.status !== 'Archived' && (
-            <button className="btn btn-sm btn-outline-dark" onClick={() => setStatus('Archived')}>Archive</button>
+            <button className="btn btn-sm btn-outline-secondary" onClick={() => setStatus('Archived')}>Archive</button>
           )}
           {(project.status === 'Complete' || project.status === 'Archived') && (
             <button className="btn btn-sm btn-outline-primary" onClick={() => setStatus('Active')}>Reactivate</button>

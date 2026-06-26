@@ -3,6 +3,7 @@ import { useBookmarks, useInbox, useJournalEntry, useTodos, useToggleTodo } from
 import PomodoroTimer from '../components/PomodoroTimer'
 import { useSettings } from '../settings'
 import { dueBadge, dueStatus } from '../util/due'
+import { priorityVariant } from '../util/priority'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -54,7 +55,7 @@ export default function Dashboard() {
                           title="Mark done" onChange={() => toggle.mutate(t.id)} />
                         <span className="flex-grow-1 text-truncate">{t.title}</span>
                         {due && <span className={`badge text-bg-${due.variant}`}>{due.label}</span>}
-                        <span className="badge text-bg-light text-muted">{t.priority}</span>
+                        <span className={`badge text-bg-${priorityVariant[t.priority]}`}>{t.priority}</span>
                       </li>
                     )
                   })}

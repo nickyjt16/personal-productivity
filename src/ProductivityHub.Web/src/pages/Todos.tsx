@@ -12,9 +12,9 @@ import ProjectBadges from '../components/ProjectBadges'
 import ProjectFilter from '../components/ProjectFilter'
 import ProjectPicker from '../components/ProjectPicker'
 import { dueBadge } from '../util/due'
+import { priorityVariant } from '../util/priority'
 
 const priorities: Priority[] = ['Low', 'Medium', 'High']
-const priorityVariant: Record<Priority, string> = { Low: 'secondary', Medium: 'info', High: 'danger' }
 
 // Convert an ISO timestamp to the yyyy-MM-dd value a <input type="date"> expects.
 function toDateInput(iso: string | null): string {
