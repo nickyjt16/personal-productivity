@@ -3,12 +3,23 @@ import { useClearAllData } from '../api/hooks'
 import { SECTIONS, useSettings } from '../settings'
 
 export default function Settings() {
-  const { isVisible, toggle } = useSettings()
+  const { isVisible, toggle, theme, setTheme } = useSettings()
 
   return (
     <div>
       <h2 className="mb-1">⚙️ Settings</h2>
       <p className="text-muted">Choose which sections appear in the sidebar and on the dashboard.</p>
+
+      <div className="card card-body mb-4" style={{ maxWidth: 480 }}>
+        <h6 className="text-muted mb-3">Appearance</h6>
+        <div className="form-check form-switch d-flex align-items-center gap-2">
+          <input className="form-check-input" type="checkbox" role="switch" id="toggle-dark"
+            checked={theme === 'dark'} onChange={(e) => setTheme(e.target.checked ? 'dark' : 'light')} />
+          <label className="form-check-label" htmlFor="toggle-dark">
+            🌙 Dark mode
+          </label>
+        </div>
+      </div>
 
       <div className="card card-body mb-4" style={{ maxWidth: 480 }}>
         <h6 className="text-muted mb-3">Sections</h6>
