@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useBookmarks, useInbox, useJournalEntry, useTodos } from '../api/hooks'
+import { useBookmarks, useInbox, useJournalEntry, useTodos, useToggleTodo } from '../api/hooks'
 import PomodoroTimer from '../components/PomodoroTimer'
 import { useSettings } from '../settings'
 import { dueBadge, dueStatus } from '../util/due'
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const greeting = new Date().getHours() < 12 ? 'Good morning' :
     new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'
 
+  const toggle = useToggleTodo()
   const overdueCount = openTodos.filter((t) => dueStatus(t.dueDate, t.isDone) === 'overdue').length
 
   return (
@@ -48,7 +49,9 @@ export default function Dashboard() {
                   {openTodos.slice(0, 6).map((t) => {
                     const due = dueBadge(t.dueDate, t.isDone)
                     return (
-                      <li key={t.id} className="list-group-item d-flex justify-content-between align-items-center gap-2 px-0">
+                      <li key={t.id} className="list-group-item d-flex align-items-center gap-2 px-0">
+                        <input type="checkbox" className="form-check-input mt-0" checked={t.isDone}
+                          title="Mark done" onChange={() => toggle.mutate(t.id)} />
                         <span className="flex-grow-1 text-truncate">{t.title}</span>
                         {due && <span className={`badge text-bg-${due.variant}`}>{due.label}</span>}
                         <span className="badge text-bg-light text-muted">{t.priority}</span>
