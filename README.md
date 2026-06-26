@@ -4,7 +4,7 @@ A personal, local-only productivity app — a small dashboard tying together six
 
 - **Todos** — tasks with priority, due date, done state, and full **edit** (title, notes, priority, due date)
 - **Quick-capture inbox** — dump a thought instantly, triage it into a todo later
-- **Bookmarks / read-later** — save links, mark as read
+- **Bookmarks / read-later** — save links, mark as read; capture from the browser extension or by [forwarding links from Teams on your phone](docs/teams-link-import.md)
 - **Notes** — free-text scratchpad
 - **Pomodoro timer** — 25/5 focus sessions, optionally tied to a task, with a floating always-on-top window
 - **Daily journal** — one dated entry per day
@@ -119,6 +119,17 @@ works in **both Chrome and Edge** — load the same `extension/` folder into eac
 
 A desktop notification confirms the save. If you run the app on a different port, change `HUB_BASE`
 in `extension/config.js` and reload the extension.
+
+---
+
+## Forwarding links from your phone (via Teams)
+
+On mobile, send yourself a link in a Teams chat and have it appear in **Bookmarks** automatically.
+A Power Automate flow writes the link to a OneDrive folder that syncs to your PC, and the Hub
+imports it — no authentication needed in the app. Off by default; see
+**[docs/teams-link-import.md](docs/teams-link-import.md)** for the full setup (folder, `LinkImport`
+config, and the flow). Once configured, links arrive on a timer or via the **↻ Check for new links**
+button on the Bookmarks page.
 
 ---
 

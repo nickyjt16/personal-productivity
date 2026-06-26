@@ -125,6 +125,25 @@ export function useDeleteBookmark() {
   })
 }
 
+export interface ImportResult {
+  enabled: boolean
+  folderPath: string
+  folderExists: boolean
+  filesProcessed: number
+  imported: number
+  duplicates: number
+  skippedNoUrl: number
+  errors: string[]
+}
+
+export function useImportLinks() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.post<ImportResult>('/api/bookmarks/import'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['bookmarks'] }),
+  })
+}
+
 // ---------- Notes ----------
 export function useNotes() {
   return useQuery({ queryKey: ['notes'], queryFn: () => api.get<Note[]>('/api/notes') })

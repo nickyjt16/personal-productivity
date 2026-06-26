@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductivityHub.Api.Data;
 using ProductivityHub.Api.Data.Entities;
+using ProductivityHub.Api.Services;
 
 namespace ProductivityHub.Api.Controllers;
 
@@ -50,6 +51,13 @@ public class BookmarksController(AppDbContext db) : ControllerBase
         db.Bookmarks.Add(bookmark);
         await db.SaveChangesAsync(ct);
         return CreatedAtAction(nameof(List), new { id = bookmark.Id }, ToDto(bookmark));
+    }
+
+    // Pull any links forwarded from Teams (via the OneDrive-synced folder) into bookmarks.
+    [HttpPost("import")]
+    public async Task<IActionResult> ImportFromTeams([FromServices] LinkImportService importer, CancellationToken ct)
+    {
+        return Ok(await importer.ImportAsync(ct));
     }
 
     [HttpPost("{id:guid}/toggle-read")]

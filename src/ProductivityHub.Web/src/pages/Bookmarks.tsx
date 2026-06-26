@@ -1,14 +1,23 @@
 import { useState } from 'react'
-import { useBookmarks, useCreateBookmark, useDeleteBookmark, useToggleBookmark } from '../api/hooks'
+import {
+  useBookmarks,
+  useCreateBookmark,
+  useDeleteBookmark,
+  useImportLinks,
+  useToggleBookmark,
+  type ImportResult,
+} from '../api/hooks'
 
 export default function Bookmarks() {
   const { data: items = [], isLoading } = useBookmarks()
   const create = useCreateBookmark()
   const toggle = useToggleBookmark()
   const remove = useDeleteBookmark()
+  const importLinks = useImportLinks()
 
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
+  const [importMsg, setImportMsg] = useState<string | null>(null)
 
   function add(e: React.FormEvent) {
     e.preventDefault()
@@ -19,10 +28,32 @@ export default function Bookmarks() {
     )
   }
 
+  function checkForLinks() {
+    importLinks.mutate(undefined, {
+      onSuccess: (r: ImportResult) => setImportMsg(describeImport(r)),
+      onError: (e) => setImportMsg(`Import failed: ${e instanceof Error ? e.message : 'unknown error'}`),
+    })
+  }
+
   return (
     <div>
-      <h2 className="mb-1">🔖 Bookmarks / read later</h2>
-      <p className="text-muted">Save links now, read them when you have time.</p>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h2 className="mb-1">🔖 Bookmarks / read later</h2>
+          <p className="text-muted">Save links now, read them when you have time.</p>
+        </div>
+        <button className="btn btn-outline-primary" onClick={checkForLinks} disabled={importLinks.isPending}>
+          {importLinks.isPending ? 'Checking…' : '↻ Check for new links'}
+        </button>
+      </div>
+
+      {importMsg && (
+        <div className="alert alert-info py-2 d-flex justify-content-between align-items-center" role="alert">
+          <span>{importMsg}</span>
+          <button type="button" className="btn-close" aria-label="Dismiss"
+            onClick={() => setImportMsg(null)} />
+        </div>
+      )}
 
       <form className="card card-body mb-4" onSubmit={add}>
         <div className="row g-2 align-items-end">
@@ -62,4 +93,14 @@ export default function Bookmarks() {
       )}
     </div>
   )
+}
+
+function describeImport(r: ImportResult): string {
+  if (!r.enabled) return 'Teams link import is turned off. Set LinkImport in appsettings.json to enable it.'
+  if (!r.folderExists) return `Import folder not found: ${r.folderPath}. Check the path and that OneDrive has synced it.`
+  if (r.imported === 0 && r.duplicates === 0 && r.skippedNoUrl === 0) return 'No new links found.'
+  const parts = [`Imported ${r.imported}`]
+  if (r.duplicates) parts.push(`${r.duplicates} already saved`)
+  if (r.skippedNoUrl) parts.push(`${r.skippedNoUrl} had no link`)
+  return parts.join(', ') + '.'
 }
