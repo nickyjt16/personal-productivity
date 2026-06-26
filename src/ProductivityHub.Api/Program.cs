@@ -39,6 +39,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+    // Apply additive schema changes to databases created before those tables existed.
+    await SchemaUpdater.ApplyAsync(db);
 }
 
 if (app.Environment.IsDevelopment())

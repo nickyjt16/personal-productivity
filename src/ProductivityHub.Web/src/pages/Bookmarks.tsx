@@ -4,15 +4,19 @@ import {
   useCreateBookmark,
   useDeleteBookmark,
   useImportLinks,
+  useSetItemProjects,
   useToggleBookmark,
   type ImportResult,
 } from '../api/hooks'
+import type { Bookmark } from '../api/types'
+import ProjectBadges from '../components/ProjectBadges'
+import ProjectFilter from '../components/ProjectFilter'
+import ProjectPicker from '../components/ProjectPicker'
 
 export default function Bookmarks() {
-  const { data: items = [], isLoading } = useBookmarks()
+  const [projectFilter, setProjectFilter] = useState('')
+  const { data: items = [], isLoading } = useBookmarks(undefined, projectFilter || undefined)
   const create = useCreateBookmark()
-  const toggle = useToggleBookmark()
-  const remove = useDeleteBookmark()
   const importLinks = useImportLinks()
 
   const [url, setUrl] = useState('')
@@ -42,9 +46,12 @@ export default function Bookmarks() {
           <h2 className="mb-1">🔖 Bookmarks / read later</h2>
           <p className="text-muted">Save links now, read them when you have time.</p>
         </div>
-        <button className="btn btn-outline-primary" onClick={checkForLinks} disabled={importLinks.isPending}>
-          {importLinks.isPending ? 'Checking…' : '↻ Check for new links'}
-        </button>
+        <div className="d-flex align-items-center gap-2">
+          <ProjectFilter value={projectFilter} onChange={setProjectFilter} />
+          <button className="btn btn-outline-primary" onClick={checkForLinks} disabled={importLinks.isPending}>
+            {importLinks.isPending ? 'Checking…' : '↻ Check for new links'}
+          </button>
+        </div>
       </div>
 
       {importMsg && (
@@ -77,21 +84,37 @@ export default function Bookmarks() {
         <p className="text-muted">No bookmarks saved yet.</p>
       ) : (
         <ul className="list-group">
-          {items.map((b) => (
-            <li key={b.id} className="list-group-item d-flex align-items-center gap-2">
-              <input type="checkbox" className="form-check-input mt-0" checked={b.isRead}
-                title="Mark read" onChange={() => toggle.mutate(b.id)} />
-              <a href={b.url} target="_blank" rel="noreferrer"
-                className={`flex-grow-1 text-truncate ${b.isRead ? 'text-muted' : ''}`}>
-                {b.title || b.url}
-              </a>
-              {b.isRead && <span className="badge text-bg-light text-muted">read</span>}
-              <button className="btn btn-sm btn-outline-danger" onClick={() => remove.mutate(b.id)}>✕</button>
-            </li>
-          ))}
+          {items.map((b) => <BookmarkRow key={b.id} bookmark={b} />)}
         </ul>
       )}
     </div>
+  )
+}
+
+function BookmarkRow({ bookmark: b }: { bookmark: Bookmark }) {
+  const toggle = useToggleBookmark()
+  const remove = useDeleteBookmark()
+  const setProjects = useSetItemProjects('bookmarks')
+
+  return (
+    <li className="list-group-item">
+      <div className="d-flex align-items-center gap-2">
+        <input type="checkbox" className="form-check-input mt-0" checked={b.isRead}
+          title="Mark read" onChange={() => toggle.mutate(b.id)} />
+        <a href={b.url} target="_blank" rel="noreferrer"
+          className={`flex-grow-1 text-truncate ${b.isRead ? 'text-muted' : ''}`}>
+          {b.title || b.url}
+        </a>
+        {b.isRead && <span className="badge text-bg-light text-muted">read</span>}
+        <ProjectPicker
+          value={b.projects.map((p) => p.id)}
+          current={b.projects}
+          onChange={(ids) => setProjects.mutate({ id: b.id, projectIds: ids })}
+        />
+        <button className="btn btn-sm btn-outline-danger" onClick={() => remove.mutate(b.id)}>✕</button>
+      </div>
+      {b.projects.length > 0 && <div className="mt-1"><ProjectBadges projects={b.projects} /></div>}
+    </li>
   )
 }
 

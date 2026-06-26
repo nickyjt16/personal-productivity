@@ -12,6 +12,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<PomodoroSession> PomodoroSessions => Set<PomodoroSession>();
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<TodoProject> TodoProjects => Set<TodoProject>();
+    public DbSet<NoteProject> NoteProjects => Set<NoteProject>();
+    public DbSet<BookmarkProject> BookmarkProjects => Set<BookmarkProject>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -45,5 +49,32 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(p => p.TodoItemId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // Many-to-many between projects and todos/notes/bookmarks via explicit join
+        // entities. Deleting either side removes the link row (cascade).
+        modelBuilder.Entity<TodoProject>(e =>
+        {
+            e.HasKey(x => new { x.TodoItemId, x.ProjectId });
+            e.HasOne(x => x.TodoItem).WithMany(t => t.ProjectLinks)
+                .HasForeignKey(x => x.TodoItemId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Project).WithMany()
+                .HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<NoteProject>(e =>
+        {
+            e.HasKey(x => new { x.NoteId, x.ProjectId });
+            e.HasOne(x => x.Note).WithMany(n => n.ProjectLinks)
+                .HasForeignKey(x => x.NoteId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Project).WithMany()
+                .HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<BookmarkProject>(e =>
+        {
+            e.HasKey(x => new { x.BookmarkId, x.ProjectId });
+            e.HasOne(x => x.Bookmark).WithMany(b => b.ProjectLinks)
+                .HasForeignKey(x => x.BookmarkId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Project).WithMany()
+                .HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

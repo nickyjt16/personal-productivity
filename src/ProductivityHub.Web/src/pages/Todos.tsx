@@ -2,11 +2,15 @@ import { useState } from 'react'
 import {
   useCreateTodo,
   useDeleteTodo,
+  useSetItemProjects,
   useTodos,
   useToggleTodo,
   useUpdateTodo,
 } from '../api/hooks'
 import type { Priority, Todo } from '../api/types'
+import ProjectBadges from '../components/ProjectBadges'
+import ProjectFilter from '../components/ProjectFilter'
+import ProjectPicker from '../components/ProjectPicker'
 
 const priorities: Priority[] = ['Low', 'Medium', 'High']
 const priorityVariant: Record<Priority, string> = { Low: 'secondary', Medium: 'info', High: 'danger' }
@@ -17,7 +21,8 @@ function toDateInput(iso: string | null): string {
 }
 
 export default function Todos() {
-  const { data: todos = [], isLoading } = useTodos()
+  const [projectFilter, setProjectFilter] = useState('')
+  const { data: todos = [], isLoading } = useTodos(undefined, projectFilter || undefined)
   const create = useCreateTodo()
   const toggle = useToggleTodo()
   const remove = useDeleteTodo()
@@ -38,7 +43,10 @@ export default function Todos() {
 
   return (
     <div>
-      <h2 className="mb-4">✅ Todos</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="mb-0">✅ Todos</h2>
+        <ProjectFilter value={projectFilter} onChange={setProjectFilter} />
+      </div>
 
       <form className="card card-body mb-4" onSubmit={add}>
         <div className="row g-2 align-items-end">
@@ -82,6 +90,7 @@ export default function Todos() {
                       {t.title}
                     </span>
                     {t.notes && <div className="small text-muted">{t.notes}</div>}
+                    {t.projects.length > 0 && <div className="mt-1"><ProjectBadges projects={t.projects} /></div>}
                   </div>
                   <span className={`badge text-bg-${priorityVariant[t.priority]}`}>{t.priority}</span>
                   {t.dueDate && (
@@ -105,10 +114,12 @@ export default function Todos() {
 
 function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
   const update = useUpdateTodo()
+  const setProjects = useSetItemProjects('todos')
   const [title, setTitle] = useState(todo.title)
   const [notes, setNotes] = useState(todo.notes ?? '')
   const [priority, setPriority] = useState<Priority>(todo.priority)
   const [dueDate, setDueDate] = useState(toDateInput(todo.dueDate))
+  const [projectIds, setProjectIds] = useState<string[]>(todo.projects.map((p) => p.id))
 
   function save(e: React.FormEvent) {
     e.preventDefault()
@@ -122,7 +133,7 @@ function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
         isDone: todo.isDone,
         dueDate: dueDate || null,
       },
-      { onSuccess: onClose },
+      { onSuccess: () => setProjects.mutate({ id: todo.id, projectIds }, { onSuccess: onClose }) },
     )
   }
 
@@ -152,8 +163,12 @@ function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
         <textarea className="form-control" rows={2} value={notes} placeholder="Optional notes"
           onChange={(e) => setNotes(e.target.value)} />
       </div>
+      <div className="d-flex align-items-center gap-2 mt-2">
+        <ProjectPicker value={projectIds} onChange={setProjectIds} current={todo.projects} />
+        <ProjectBadges projects={todo.projects.filter((p) => projectIds.includes(p.id))} />
+      </div>
       <div className="d-flex gap-2 mt-2">
-        <button className="btn btn-sm btn-primary" disabled={update.isPending}>Save</button>
+        <button className="btn btn-sm btn-primary" disabled={update.isPending || setProjects.isPending}>Save</button>
         <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClose}>
           Cancel
         </button>

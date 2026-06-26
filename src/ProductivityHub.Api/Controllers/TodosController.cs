@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductivityHub.Api.Data;
 using ProductivityHub.Api.Data.Entities;
+using ProductivityHub.Api.Models;
 
 namespace ProductivityHub.Api.Controllers;
 
@@ -10,7 +11,8 @@ namespace ProductivityHub.Api.Controllers;
 public class TodosController(AppDbContext db) : ControllerBase
 {
     public record TodoDto(Guid Id, string Title, string? Notes, Priority Priority, bool IsDone,
-        DateTimeOffset? DueDate, DateTimeOffset CreatedAt, DateTimeOffset? CompletedAt);
+        DateTimeOffset? DueDate, DateTimeOffset CreatedAt, DateTimeOffset? CompletedAt,
+        List<ProjectRef> Projects);
 
     public record CreateTodoRequest(string Title, string? Notes, Priority? Priority, DateTimeOffset? DueDate);
 
@@ -18,24 +20,28 @@ public class TodosController(AppDbContext db) : ControllerBase
         bool IsDone, DateTimeOffset? DueDate);
 
     private static TodoDto ToDto(TodoItem t) =>
-        new(t.Id, t.Title, t.Notes, t.Priority, t.IsDone, t.DueDate, t.CreatedAt, t.CompletedAt);
+        new(t.Id, t.Title, t.Notes, t.Priority, t.IsDone, t.DueDate, t.CreatedAt, t.CompletedAt,
+            t.ProjectLinks.Select(l => new ProjectRef(l.Project.Id, l.Project.Name, l.Project.Color)).ToList());
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] bool? done, CancellationToken ct)
+    public async Task<IActionResult> List([FromQuery] bool? done, [FromQuery] Guid? projectId, CancellationToken ct)
     {
-        var query = db.Todos.AsQueryable();
+        var query = db.Todos
+            .Include(t => t.ProjectLinks).ThenInclude(l => l.Project)
+            .AsQueryable();
         if (done is not null)
             query = query.Where(t => t.IsDone == done);
+        if (projectId is not null)
+            query = query.Where(t => t.ProjectLinks.Any(l => l.ProjectId == projectId));
 
         var items = await query
             .OrderBy(t => t.IsDone)
             .ThenByDescending(t => t.Priority)
             .ThenBy(t => t.DueDate)
             .ThenByDescending(t => t.CreatedAt)
-            .Select(t => ToDto(t))
             .ToListAsync(ct);
 
-        return Ok(items);
+        return Ok(items.Select(ToDto));
     }
 
     [HttpPost]
@@ -83,6 +89,27 @@ public class TodosController(AppDbContext db) : ControllerBase
         SetDone(todo, !todo.IsDone);
         await db.SaveChangesAsync(ct);
         return Ok(ToDto(todo));
+    }
+
+    // Replace the full set of projects this todo belongs to.
+    [HttpPut("{id:guid}/projects")]
+    public async Task<IActionResult> SetProjects(Guid id, SetProjectsRequest req, CancellationToken ct)
+    {
+        if (!await db.Todos.AnyAsync(t => t.Id == id, ct)) return NotFound();
+
+        var desired = (req.ProjectIds ?? []).Distinct().ToHashSet();
+        var valid = (await db.Projects.Where(p => desired.Contains(p.Id))
+            .Select(p => p.Id).ToListAsync(ct)).ToHashSet();
+
+        var existing = await db.TodoProjects.Where(x => x.TodoItemId == id).ToListAsync(ct);
+        db.TodoProjects.RemoveRange(existing.Where(x => !valid.Contains(x.ProjectId)));
+
+        var existingIds = existing.Select(x => x.ProjectId).ToHashSet();
+        foreach (var pid in valid.Where(pid => !existingIds.Contains(pid)))
+            db.TodoProjects.Add(new TodoProject { TodoItemId = id, ProjectId = pid });
+
+        await db.SaveChangesAsync(ct);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

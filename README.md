@@ -8,6 +8,7 @@ A personal, local-only productivity app — a small dashboard tying together six
 - **Notes** — free-text scratchpad
 - **Pomodoro timer** — 25/5 focus sessions, optionally tied to a task, with a floating always-on-top window
 - **Daily journal** — one dated entry per day
+- **Projects** — group todos, notes, and bookmarks under colour-coded projects (New/Active/Complete/Archived); assign from each item or from the project, with per-list project filters
 - **Settings** — show/hide any section to keep the app focused
 
 Single-user and local — no authentication, all data in a local SQLite file on your machine.

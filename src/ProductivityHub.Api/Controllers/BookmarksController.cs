@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductivityHub.Api.Data;
 using ProductivityHub.Api.Data.Entities;
+using ProductivityHub.Api.Models;
 using ProductivityHub.Api.Services;
 
 namespace ProductivityHub.Api.Controllers;
@@ -11,27 +12,31 @@ namespace ProductivityHub.Api.Controllers;
 public class BookmarksController(AppDbContext db) : ControllerBase
 {
     public record BookmarkDto(Guid Id, string Url, string? Title, string? Notes, bool IsRead,
-        DateTimeOffset CreatedAt, DateTimeOffset? ReadAt);
+        DateTimeOffset CreatedAt, DateTimeOffset? ReadAt, List<ProjectRef> Projects);
 
     public record CreateBookmarkRequest(string Url, string? Title, string? Notes);
 
     private static BookmarkDto ToDto(Bookmark b) =>
-        new(b.Id, b.Url, b.Title, b.Notes, b.IsRead, b.CreatedAt, b.ReadAt);
+        new(b.Id, b.Url, b.Title, b.Notes, b.IsRead, b.CreatedAt, b.ReadAt,
+            b.ProjectLinks.Select(l => new ProjectRef(l.Project.Id, l.Project.Name, l.Project.Color)).ToList());
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] bool? read, CancellationToken ct)
+    public async Task<IActionResult> List([FromQuery] bool? read, [FromQuery] Guid? projectId, CancellationToken ct)
     {
-        var query = db.Bookmarks.AsQueryable();
+        var query = db.Bookmarks
+            .Include(b => b.ProjectLinks).ThenInclude(l => l.Project)
+            .AsQueryable();
         if (read is not null)
             query = query.Where(b => b.IsRead == read);
+        if (projectId is not null)
+            query = query.Where(b => b.ProjectLinks.Any(l => l.ProjectId == projectId));
 
         var items = await query
             .OrderBy(b => b.IsRead)
             .ThenByDescending(b => b.CreatedAt)
-            .Select(b => ToDto(b))
             .ToListAsync(ct);
 
-        return Ok(items);
+        return Ok(items.Select(ToDto));
     }
 
     [HttpPost]
@@ -70,6 +75,26 @@ public class BookmarksController(AppDbContext db) : ControllerBase
         bookmark.ReadAt = bookmark.IsRead ? DateTimeOffset.UtcNow : null;
         await db.SaveChangesAsync(ct);
         return Ok(ToDto(bookmark));
+    }
+
+    [HttpPut("{id:guid}/projects")]
+    public async Task<IActionResult> SetProjects(Guid id, SetProjectsRequest req, CancellationToken ct)
+    {
+        if (!await db.Bookmarks.AnyAsync(b => b.Id == id, ct)) return NotFound();
+
+        var desired = (req.ProjectIds ?? []).Distinct().ToHashSet();
+        var valid = (await db.Projects.Where(p => desired.Contains(p.Id))
+            .Select(p => p.Id).ToListAsync(ct)).ToHashSet();
+
+        var existing = await db.BookmarkProjects.Where(x => x.BookmarkId == id).ToListAsync(ct);
+        db.BookmarkProjects.RemoveRange(existing.Where(x => !valid.Contains(x.ProjectId)));
+
+        var existingIds = existing.Select(x => x.ProjectId).ToHashSet();
+        foreach (var pid in valid.Where(pid => !existingIds.Contains(pid)))
+            db.BookmarkProjects.Add(new BookmarkProject { BookmarkId = id, ProjectId = pid });
+
+        await db.SaveChangesAsync(ct);
+        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]

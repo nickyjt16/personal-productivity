@@ -8,13 +8,25 @@ import type {
   PomodoroKind,
   PomodoroSession,
   Priority,
+  Project,
+  ProjectStatus,
   Todo,
 } from './types'
 
+// Build a query string from defined params only.
+function qs(params: Record<string, string | boolean | undefined>): string {
+  const pairs = Object.entries(params)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}=${encodeURIComponent(String(v))}`)
+  return pairs.length ? `?${pairs.join('&')}` : ''
+}
+
 // ---------- Todos ----------
-export function useTodos(done?: boolean) {
-  const qs = done === undefined ? '' : `?done=${done}`
-  return useQuery({ queryKey: ['todos', done], queryFn: () => api.get<Todo[]>(`/api/todos${qs}`) })
+export function useTodos(done?: boolean, projectId?: string) {
+  return useQuery({
+    queryKey: ['todos', done, projectId],
+    queryFn: () => api.get<Todo[]>(`/api/todos${qs({ done, projectId })}`),
+  })
 }
 
 export function useCreateTodo() {
@@ -95,9 +107,11 @@ export function useDeleteInbox() {
 }
 
 // ---------- Bookmarks ----------
-export function useBookmarks(read?: boolean) {
-  const qs = read === undefined ? '' : `?read=${read}`
-  return useQuery({ queryKey: ['bookmarks', read], queryFn: () => api.get<Bookmark[]>(`/api/bookmarks${qs}`) })
+export function useBookmarks(read?: boolean, projectId?: string) {
+  return useQuery({
+    queryKey: ['bookmarks', read, projectId],
+    queryFn: () => api.get<Bookmark[]>(`/api/bookmarks${qs({ read, projectId })}`),
+  })
 }
 
 export function useCreateBookmark() {
@@ -145,8 +159,11 @@ export function useImportLinks() {
 }
 
 // ---------- Notes ----------
-export function useNotes() {
-  return useQuery({ queryKey: ['notes'], queryFn: () => api.get<Note[]>('/api/notes') })
+export function useNotes(projectId?: string) {
+  return useQuery({
+    queryKey: ['notes', projectId],
+    queryFn: () => api.get<Note[]>(`/api/notes${qs({ projectId })}`),
+  })
 }
 
 export function useCreateNote() {
@@ -215,5 +232,58 @@ export function useCompletePomodoro() {
   return useMutation({
     mutationFn: (id: string) => api.post(`/api/pomodoro/${id}/complete`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['pomodoro'] }),
+  })
+}
+
+// ---------- Projects ----------
+export function useProjects(status: string = 'open') {
+  return useQuery({
+    queryKey: ['projects', status],
+    queryFn: () => api.get<Project[]>(`/api/projects${qs({ status })}`),
+  })
+}
+
+export function useCreateProject() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { name: string; description?: string; color?: string; status?: ProjectStatus }) =>
+      api.post<Project>('/api/projects', body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+  })
+}
+
+export function useUpdateProject() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: {
+      id: string; name: string; description?: string | null; color?: string; status?: ProjectStatus
+    }) => api.put<Project>(`/api/projects/${id}`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+  })
+}
+
+export function useDeleteProject() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.del(`/api/projects/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      qc.invalidateQueries({ queryKey: ['todos'] })
+      qc.invalidateQueries({ queryKey: ['notes'] })
+      qc.invalidateQueries({ queryKey: ['bookmarks'] })
+    },
+  })
+}
+
+// Set the full set of projects an item belongs to. `kind` is the API route segment.
+export function useSetItemProjects(kind: 'todos' | 'notes' | 'bookmarks') {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, projectIds }: { id: string; projectIds: string[] }) =>
+      api.put(`/api/${kind}/${id}/projects`, { projectIds }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [kind] })
+      qc.invalidateQueries({ queryKey: ['projects'] })
+    },
   })
 }

@@ -5,6 +5,7 @@ import Inbox from './pages/Inbox'
 import Bookmarks from './pages/Bookmarks'
 import Notes from './pages/Notes'
 import Journal from './pages/Journal'
+import Projects from './pages/Projects'
 import Settings from './pages/Settings'
 import { SECTIONS, useSettings } from './settings'
 
@@ -37,6 +38,7 @@ export default function App() {
             <Route path="/bookmarks" element={<Bookmarks />} />
             <Route path="/notes" element={<Notes />} />
             <Route path="/journal" element={<Journal />} />
+            <Route path="/projects" element={<Projects />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
         </div>
