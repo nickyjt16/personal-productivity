@@ -18,7 +18,7 @@ public class BookmarksController(AppDbContext db) : ControllerBase
 
     private static BookmarkDto ToDto(Bookmark b) =>
         new(b.Id, b.Url, b.Title, b.Notes, b.IsRead, b.CreatedAt, b.ReadAt,
-            b.ProjectLinks.Select(l => new ProjectRef(l.Project.Id, l.Project.Name, l.Project.Color)).ToList());
+            b.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList());
 
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] bool? read, [FromQuery] Guid? projectId, CancellationToken ct)

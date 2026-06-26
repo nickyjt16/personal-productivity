@@ -3,10 +3,11 @@ bin/
 obj/
 *.user
 
-# Local database
+# Local database + automatic backups
 *.db
 *.db-shm
 *.db-wal
+backups/
 
 # Node / Vite
 node_modules/

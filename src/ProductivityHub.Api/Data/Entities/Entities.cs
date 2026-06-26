@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace ProductivityHub.Api.Data.Entities;
 
 public enum Priority
@@ -24,7 +26,7 @@ public class TodoItem
     public DateTimeOffset? DueDate { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
-    public List<TodoProject> ProjectLinks { get; set; } = [];
+    [JsonIgnore] public List<TodoProject> ProjectLinks { get; set; } = [];
 }
 
 public class InboxItem
@@ -45,7 +47,7 @@ public class Bookmark
     public bool IsRead { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ReadAt { get; set; }
-    public List<BookmarkProject> ProjectLinks { get; set; } = [];
+    [JsonIgnore] public List<BookmarkProject> ProjectLinks { get; set; } = [];
 }
 
 public class Note
@@ -55,7 +57,7 @@ public class Note
     public string Body { get; set; } = "";
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
-    public List<NoteProject> ProjectLinks { get; set; } = [];
+    [JsonIgnore] public List<NoteProject> ProjectLinks { get; set; } = [];
 }
 
 public class JournalEntry
@@ -72,7 +74,7 @@ public class PomodoroSession
 {
     public Guid Id { get; set; }
     public Guid? TodoItemId { get; set; }
-    public TodoItem? TodoItem { get; set; }
+    [JsonIgnore] public TodoItem? TodoItem { get; set; }
     public DateTimeOffset StartedAt { get; set; }
     public int DurationMinutes { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
@@ -99,26 +101,30 @@ public class Project
 }
 
 // Join entities — a todo/note/bookmark can belong to many projects and vice versa.
+// Navigation properties are nullable so the API's model validation doesn't treat
+// them as required when binding a backup for import (they're [JsonIgnore]d anyway).
+// The relationships themselves are required, configured in AppDbContext via the
+// non-nullable FK columns.
 public class TodoProject
 {
     public Guid TodoItemId { get; set; }
-    public TodoItem TodoItem { get; set; } = null!;
+    [JsonIgnore] public TodoItem? TodoItem { get; set; }
     public Guid ProjectId { get; set; }
-    public Project Project { get; set; } = null!;
+    [JsonIgnore] public Project? Project { get; set; }
 }
 
 public class NoteProject
 {
     public Guid NoteId { get; set; }
-    public Note Note { get; set; } = null!;
+    [JsonIgnore] public Note? Note { get; set; }
     public Guid ProjectId { get; set; }
-    public Project Project { get; set; } = null!;
+    [JsonIgnore] public Project? Project { get; set; }
 }
 
 public class BookmarkProject
 {
     public Guid BookmarkId { get; set; }
-    public Bookmark Bookmark { get; set; } = null!;
+    [JsonIgnore] public Bookmark? Bookmark { get; set; }
     public Guid ProjectId { get; set; }
-    public Project Project { get; set; } = null!;
+    [JsonIgnore] public Project? Project { get; set; }
 }

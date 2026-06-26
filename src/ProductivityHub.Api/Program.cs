@@ -37,6 +37,9 @@ var app = builder.Build();
 // Create the SQLite database on first run.
 using (var scope = app.Services.CreateScope())
 {
+    // Back up the existing database before touching it.
+    DbBackup.CreateStartupBackup(connectionString, app.Logger);
+
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
     // Apply additive schema changes to databases created before those tables existed.

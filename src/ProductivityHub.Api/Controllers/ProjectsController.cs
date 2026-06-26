@@ -35,7 +35,7 @@ public class ProjectsController(AppDbContext db) : ControllerBase
             .Select(p => new ProjectDto(
                 p.Id, p.Name, p.Description, p.Color, p.Status, p.CreatedAt, p.UpdatedAt,
                 db.TodoProjects.Count(tp => tp.ProjectId == p.Id),
-                db.TodoProjects.Count(tp => tp.ProjectId == p.Id && tp.TodoItem.IsDone),
+                db.TodoProjects.Count(tp => tp.ProjectId == p.Id && tp.TodoItem!.IsDone),
                 db.NoteProjects.Count(np => np.ProjectId == p.Id),
                 db.BookmarkProjects.Count(bp => bp.ProjectId == p.Id)))
             .ToListAsync(ct);
@@ -108,7 +108,7 @@ public class ProjectsController(AppDbContext db) : ControllerBase
     private async Task<ProjectDto> ToDto(Project p, CancellationToken ct) =>
         new(p.Id, p.Name, p.Description, p.Color, p.Status, p.CreatedAt, p.UpdatedAt,
             await db.TodoProjects.CountAsync(tp => tp.ProjectId == p.Id, ct),
-            await db.TodoProjects.CountAsync(tp => tp.ProjectId == p.Id && tp.TodoItem.IsDone, ct),
+            await db.TodoProjects.CountAsync(tp => tp.ProjectId == p.Id && tp.TodoItem!.IsDone, ct),
             await db.NoteProjects.CountAsync(np => np.ProjectId == p.Id, ct),
             await db.BookmarkProjects.CountAsync(bp => bp.ProjectId == p.Id, ct));
 }

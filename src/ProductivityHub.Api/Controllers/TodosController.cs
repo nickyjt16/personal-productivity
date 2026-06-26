@@ -21,7 +21,7 @@ public class TodosController(AppDbContext db) : ControllerBase
 
     private static TodoDto ToDto(TodoItem t) =>
         new(t.Id, t.Title, t.Notes, t.Priority, t.IsDone, t.DueDate, t.CreatedAt, t.CompletedAt,
-            t.ProjectLinks.Select(l => new ProjectRef(l.Project.Id, l.Project.Name, l.Project.Color)).ToList());
+            t.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList());
 
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] bool? done, [FromQuery] Guid? projectId, CancellationToken ct)

@@ -17,7 +17,7 @@ public class NotesController(AppDbContext db) : ControllerBase
 
     private static NoteDto ToDto(Note n) =>
         new(n.Id, n.Title, n.Body, n.CreatedAt, n.UpdatedAt,
-            n.ProjectLinks.Select(l => new ProjectRef(l.Project.Id, l.Project.Name, l.Project.Color)).ToList());
+            n.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList());
 
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? projectId, CancellationToken ct)

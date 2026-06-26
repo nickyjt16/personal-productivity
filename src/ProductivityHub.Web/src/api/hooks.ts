@@ -308,6 +308,14 @@ export function useClearAllData() {
   })
 }
 
+export function useImportData() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (backup: unknown) => api.post('/api/data/import', backup),
+    onSuccess: () => qc.invalidateQueries(),
+  })
+}
+
 // Set the full set of projects an item belongs to. `kind` is the API route segment.
 export function useSetItemProjects(kind: 'todos' | 'notes' | 'bookmarks') {
   const qc = useQueryClient()
