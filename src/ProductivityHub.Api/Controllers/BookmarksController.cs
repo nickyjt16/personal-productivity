@@ -40,16 +40,22 @@ public class BookmarksController(AppDbContext db) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateBookmarkRequest req, CancellationToken ct)
+    public async Task<IActionResult> Create(CreateBookmarkRequest req,
+        [FromServices] TitleFetcher titles, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Url))
             return BadRequest("Url is required.");
 
+        var url = req.Url.Trim();
+        var title = string.IsNullOrWhiteSpace(req.Title) ? null : req.Title.Trim();
+        // No title supplied — try to read the page's <title>.
+        title ??= await titles.FetchAsync(url, ct);
+
         var bookmark = new Bookmark
         {
             Id = Guid.NewGuid(),
-            Url = req.Url.Trim(),
-            Title = string.IsNullOrWhiteSpace(req.Title) ? null : req.Title.Trim(),
+            Url = url,
+            Title = title,
             Notes = req.Notes,
             CreatedAt = DateTimeOffset.UtcNow,
         };

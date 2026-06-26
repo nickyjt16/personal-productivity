@@ -30,6 +30,7 @@ public record ImportResult(
 public partial class LinkImportService(
     AppDbContext db,
     IOptions<LinkImportOptions> options,
+    TitleFetcher titleFetcher,
     ILogger<LinkImportService> logger)
 {
     [GeneratedRegex(@"https?://[^\s<>""')\]]+", RegexOptions.IgnoreCase)]
@@ -77,6 +78,7 @@ public partial class LinkImportService(
                     {
                         Id = Guid.NewGuid(),
                         Url = url,
+                        Title = await titleFetcher.FetchAsync(url, ct),
                         CreatedAt = DateTimeOffset.UtcNow,
                     });
                     imported++;

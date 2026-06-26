@@ -23,6 +23,10 @@ builder.Services.Configure<LinkImportOptions>(builder.Configuration.GetSection("
 builder.Services.AddScoped<LinkImportService>();
 builder.Services.AddHostedService<LinkImportBackgroundService>();
 
+// Auto-fetch page titles for bare URLs.
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<TitleFetcher>();
+
 // Permissive CORS for local single-user use (Vite dev server on another port).
 builder.Services.AddCors(options =>
 {

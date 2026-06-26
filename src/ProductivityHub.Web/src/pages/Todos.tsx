@@ -11,6 +11,7 @@ import type { Priority, Todo } from '../api/types'
 import ProjectBadges from '../components/ProjectBadges'
 import ProjectFilter from '../components/ProjectFilter'
 import ProjectPicker from '../components/ProjectPicker'
+import { dueBadge } from '../util/due'
 
 const priorities: Priority[] = ['Low', 'Medium', 'High']
 const priorityVariant: Record<Priority, string> = { Low: 'secondary', Medium: 'info', High: 'danger' }
@@ -93,11 +94,10 @@ export default function Todos() {
                     {t.projects.length > 0 && <div className="mt-1"><ProjectBadges projects={t.projects} /></div>}
                   </div>
                   <span className={`badge text-bg-${priorityVariant[t.priority]}`}>{t.priority}</span>
-                  {t.dueDate && (
-                    <span className="badge text-bg-light text-muted">
-                      {new Date(t.dueDate).toLocaleDateString()}
-                    </span>
-                  )}
+                  {(() => {
+                    const due = dueBadge(t.dueDate, t.isDone)
+                    return due ? <span className={`badge text-bg-${due.variant}`}>{due.label}</span> : null
+                  })()}
                   <button className="btn btn-sm btn-outline-secondary" title="Edit"
                     onClick={() => setEditingId(t.id)}>✎</button>
                   <button className="btn btn-sm btn-outline-danger" title="Delete"

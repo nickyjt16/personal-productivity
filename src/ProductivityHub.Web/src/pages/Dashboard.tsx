@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useBookmarks, useInbox, useJournalEntry, useTodos } from '../api/hooks'
 import PomodoroTimer from '../components/PomodoroTimer'
 import { useSettings } from '../settings'
+import { dueBadge, dueStatus } from '../util/due'
 
 function today() {
   return new Date().toISOString().slice(0, 10)
@@ -16,6 +17,8 @@ export default function Dashboard() {
 
   const greeting = new Date().getHours() < 12 ? 'Good morning' :
     new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'
+
+  const overdueCount = openTodos.filter((t) => dueStatus(t.dueDate, t.isDone) === 'overdue').length
 
   return (
     <div>
@@ -32,17 +35,26 @@ export default function Dashboard() {
         {isVisible('todos') && (
           <div className="col-md-7">
             <div className="card card-body">
-              <h5 className="card-title">Today's tasks</h5>
+              <h5 className="card-title d-flex justify-content-between align-items-center">
+                <span>Today's tasks</span>
+                {overdueCount > 0 && (
+                  <span className="badge text-bg-danger">{overdueCount} overdue</span>
+                )}
+              </h5>
               {openTodos.length === 0 ? (
                 <p className="text-muted mb-0">Nothing open. <Link to="/todos">Add a task →</Link></p>
               ) : (
                 <ul className="list-group list-group-flush">
-                  {openTodos.slice(0, 6).map((t) => (
-                    <li key={t.id} className="list-group-item d-flex justify-content-between px-0">
-                      <span>{t.title}</span>
-                      <span className="badge text-bg-light text-muted">{t.priority}</span>
-                    </li>
-                  ))}
+                  {openTodos.slice(0, 6).map((t) => {
+                    const due = dueBadge(t.dueDate, t.isDone)
+                    return (
+                      <li key={t.id} className="list-group-item d-flex justify-content-between align-items-center gap-2 px-0">
+                        <span className="flex-grow-1 text-truncate">{t.title}</span>
+                        {due && <span className={`badge text-bg-${due.variant}`}>{due.label}</span>}
+                        <span className="badge text-bg-light text-muted">{t.priority}</span>
+                      </li>
+                    )
+                  })}
                 </ul>
               )}
             </div>

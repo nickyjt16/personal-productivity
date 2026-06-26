@@ -14,6 +14,7 @@ public class ApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Development");
         builder.UseSetting("ConnectionStrings:AppDb", $"Data Source={_dbPath}");
         builder.UseSetting("LinkImport:Enabled", "false");
+        builder.UseSetting("Bookmarks:AutoFetchTitles", "false"); // no network during tests
     }
 
     protected override void Dispose(bool disposing)
