@@ -29,6 +29,62 @@ There are **two versions of the app and they share the same data**, so you can u
 
 ---
 
+## Features in detail
+
+- **✅ Todos** — each task has a **priority** (Low/Medium/High) and an optional **due date**. Overdue
+  and due-today tasks get a coloured badge. Tasks can **repeat** — set *Daily*, *Weekly*, or *Monthly*
+  and, when you tick one off, instead of disappearing it rolls its due date forward to the next
+  occurrence. Assign a task to one or more **projects** (see below).
+- **📥 Inbox** — a fast scratch space. Type a thought, press **Enter**, and it's saved. Later, triage
+  each item: turn it into a todo, mark it done, or delete it.
+- **🔖 Bookmarks** — save links to read later, mark them read/unread, and group them by project. Save
+  pages straight from your browser with the extension (section 3), including smart LinkedIn-post capture.
+- **📝 Notes** — a simple notepad; notes can belong to projects.
+- **📔 Journal** — one dated entry per day.
+- **📁 Projects** — a project groups related **todos, notes, bookmarks and secrets**. Give it a colour
+  and a status (Active/Complete/Archived). Every list has a **project filter** to focus on one project,
+  and the project view shows progress across its items.
+- **🔑 Secrets** — track API keys, passwords, client secrets and their **expiry dates**. You get a
+  warning a week before one expires (and again on the desktop app at launch). Each secret can have a
+  link to where it's managed and can be linked to projects. *(Stored locally in plain text — see
+  "Your data" below.)*
+- **🍅 Pomodoro** — a focus timer with a floating, always-on-top mini window so it stays visible while
+  you work in other apps.
+- **🔎 Search** — type in the search box and press **Enter** to search across everything.
+- **🌙 Dark mode** and one-click **backup / restore** live in **Settings**.
+
+### Desktop-only extras
+
+- **🔔 Launch reminders** — when the desktop app starts it shows todos due today/overdue and any secrets
+  expiring soon.
+- **📌 Runs in the system tray** — closing the window doesn't quit the app; it tucks into the
+  notification area (bottom-right of the taskbar). **Double-click** the tray icon to reopen, or
+  **right-click** it for *Open / Quick capture / Quit*.
+- **⚡ Global quick capture** — press **Ctrl+Alt+N from anywhere** (even when the app is hidden or you're
+  in another program) to pop a small box; jot a thought and it lands in your Inbox to sort later.
+- **☁️ Optional sync** — **Settings → Data location** can move the data file into OneDrive (or any
+  folder) so two PCs share it. It's **off by default** — everything stays on your machine until you
+  turn it on.
+
+### Keyboard shortcuts
+
+| Shortcut | Where | What it does |
+|----------|-------|--------------|
+| **Ctrl+Alt+N** | Anywhere (desktop app) | Open quick capture — jot a note into the Inbox |
+| **Ctrl+Enter** | Quick-capture box | Save the note |
+| **Esc** | Quick-capture box | Close without saving |
+| **Enter** | Inbox capture field | Add the item |
+| **Enter** | Search box | Run the search |
+
+### Where do I add a todo/secret to a project?
+
+- **Desktop app:** each todo or secret row has a small **🏷 tag button** on the right — click it to pick
+  its projects.
+- **Web app:** on **Secrets**, the project picker is in the add/edit form. On **Todos**, click the
+  **✎ edit** button on a task and the project picker appears in the edit row.
+
+---
+
 ## 1. Desktop app (recommended)
 
 ### Step 1 — install .NET (one-time)
@@ -137,3 +193,5 @@ see [docs/teams-link-import.md](docs/teams-link-import.md).
 - **Web** (`ProductivityHub.Web`): React 19 + Vite + TypeScript + Bootstrap 5.
 - Tests: `dotnet test`. CI (GitHub Actions) builds Core/API/web + runs tests on every push (the
   Windows-only WPF app is built locally).
+- **Using an AI coding agent?** See [CLAUDE.md](CLAUDE.md) — it explains the architecture, the
+  by-hand schema-evolution convention (no EF migrations), and the gotchas to avoid before you edit.
