@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NavLink, Route, Routes, useNavigate } from 'react-router-dom'
+import { useExpiringSecrets } from './api/hooks'
 import Dashboard from './pages/Dashboard'
 import Todos from './pages/Todos'
 import Inbox from './pages/Inbox'
@@ -7,6 +8,7 @@ import Bookmarks from './pages/Bookmarks'
 import Notes from './pages/Notes'
 import Journal from './pages/Journal'
 import Projects from './pages/Projects'
+import Secrets from './pages/Secrets'
 import Search from './pages/Search'
 import Settings from './pages/Settings'
 import { SECTIONS, useSettings } from './settings'
@@ -19,6 +21,7 @@ export default function App() {
 
   return (
     <div className="d-flex min-vh-100">
+      <ExpiryNotifier />
       <aside className="bg-dark text-white p-3 d-flex flex-column" style={{ width: 220 }}>
         <h1 className="h5 mb-3">⚡ Productivity Hub</h1>
         <SearchBox />
@@ -42,6 +45,7 @@ export default function App() {
             <Route path="/notes" element={<Notes />} />
             <Route path="/journal" element={<Journal />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/secrets" element={<Secrets />} />
             <Route path="/search" element={<Search />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>
@@ -67,10 +71,28 @@ function NavItem({ to, icon, label, end }: { to: string; icon: string; label: st
     <NavLink
       to={to}
       end={end}
-      className={({ isActive }) => `nav-link text-start ${isActive ? 'active' : 'text-white-50'}`}
+      className={({ isActive }) => `nav-link text-start text-white ${isActive ? 'active' : ''}`}
+      style={({ isActive }) => ({ opacity: isActive ? 1 : 0.8 })}
     >
       <span className="me-2">{icon}</span>
       {label}
     </NavLink>
   )
+}
+
+// Fires a desktop notification when secrets are within a week of expiry.
+function ExpiryNotifier() {
+  const { data } = useExpiringSecrets()
+  const fired = useRef(false)
+
+  useEffect(() => {
+    if (fired.current || !data || data.length === 0 || !('Notification' in window)) return
+    fired.current = true
+    const body = data.map((s) => `${s.name} — ${s.daysLeft < 0 ? 'expired' : `${s.daysLeft}d left`}`).join('\n')
+    const notify = () => new Notification('🔑 Secrets expiring soon', { body })
+    if (Notification.permission === 'granted') notify()
+    else if (Notification.permission === 'default') Notification.requestPermission().then((p) => { if (p === 'granted') notify() })
+  }, [data])
+
+  return null
 }

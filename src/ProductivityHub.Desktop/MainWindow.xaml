@@ -38,6 +38,6 @@
             </DockPanel>
         </Border>
 
-        <ContentControl Grid.Column="1" x:Name="Content" />
+        <ContentControl Grid.Column="1" x:Name="MainContent" />
     </Grid>
 </Window>

@@ -51,6 +51,17 @@ public static class SchemaUpdater
                 CONSTRAINT "FK_BookmarkProjects_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE
             );
             CREATE INDEX IF NOT EXISTS "IX_BookmarkProjects_ProjectId" ON "BookmarkProjects" ("ProjectId");
+
+            CREATE TABLE IF NOT EXISTS "Secrets" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_Secrets" PRIMARY KEY,
+                "Name" TEXT NOT NULL,
+                "ClientId" TEXT NULL,
+                "Value" TEXT NULL,
+                "ExpiresOn" TEXT NOT NULL,
+                "Notes" TEXT NULL,
+                "CreatedAt" INTEGER NOT NULL,
+                "UpdatedAt" INTEGER NOT NULL
+            );
             """;
 
         await db.Database.ExecuteSqlRawAsync(sql, ct);

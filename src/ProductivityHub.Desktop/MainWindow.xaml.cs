@@ -20,6 +20,7 @@ public partial class MainWindow : Window
         new("notes", "📝  Notes"),
         new("journal", "📔  Journal"),
         new("projects", "📁  Projects"),
+        new("secrets", "🔑  Secrets"),
         new("pomodoro", "🍅  Pomodoro"),
     };
 
@@ -51,7 +52,7 @@ public partial class MainWindow : Window
 
     private void Navigate(string key, Button? source = null)
     {
-        Content.Content = CreateView(key);
+        MainContent.Content = CreateView(key);
         Highlight(source ?? NavPanel.Children.OfType<Button>().FirstOrDefault(b => (string?)b.Tag == key));
     }
 
@@ -70,6 +71,7 @@ public partial class MainWindow : Window
         "notes" => new NotesView(),
         "journal" => new JournalView(),
         "projects" => new ProjectsView(),
+        "secrets" => new SecretsView(),
         "pomodoro" => new PomodoroView(),
         _ => new DashboardView(),
     };
@@ -79,13 +81,13 @@ public partial class MainWindow : Window
         if (e.Key != Key.Enter) return;
         var q = SearchBox.Text.Trim();
         if (q.Length == 0) return;
-        Content.Content = new SearchView(q);
+        MainContent.Content = new SearchView(q);
         Highlight(null);
     }
 
     private void Settings_Click(object sender, RoutedEventArgs e)
     {
-        Content.Content = new SettingsView(this);
+        MainContent.Content = new SettingsView(this);
         Highlight(null);
     }
 

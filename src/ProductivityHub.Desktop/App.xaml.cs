@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using Microsoft.EntityFrameworkCore;
 using ProductivityHub.Core;
 
 namespace ProductivityHub.Desktop;
@@ -34,6 +35,30 @@ public partial class App : Application
         }
 
         new MainWindow().Show();
+
+        await NotifyExpiringSecretsAsync();
+    }
+
+    // A week's warning before any tracked secret expires.
+    private static async Task NotifyExpiringSecretsAsync()
+    {
+        try
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+            var cutoff = today.AddDays(7);
+            await using var db = Db.Context();
+            var expiring = await db.Secrets.Where(s => s.ExpiresOn <= cutoff).OrderBy(s => s.ExpiresOn).ToListAsync();
+            if (expiring.Count == 0) return;
+
+            var lines = expiring.Select(s =>
+            {
+                var d = s.ExpiresOn.DayNumber - today.DayNumber;
+                var when = d < 0 ? $"expired {-d}d ago" : d == 0 ? "expires today" : $"expires in {d}d";
+                return $"• {s.Name} — {when}";
+            });
+            MessageBox.Show(string.Join("\n", lines), "🔑 Secrets expiring soon");
+        }
+        catch (Exception ex) { Log(ex); }
     }
 
     // Swaps the first merged dictionary (the theme) at runtime; Controls.xaml uses

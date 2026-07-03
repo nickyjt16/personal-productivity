@@ -17,6 +17,7 @@ export const SECTIONS: SectionDef[] = [
   { key: 'notes', label: 'Notes', icon: '📝', path: '/notes' },
   { key: 'journal', label: 'Journal', icon: '📔', path: '/journal' },
   { key: 'projects', label: 'Projects', icon: '📁', path: '/projects' },
+  { key: 'secrets', label: 'Secrets', icon: '🔑', path: '/secrets' },
   { key: 'pomodoro', label: 'Pomodoro timer', icon: '🍅', path: '' },
 ]
 

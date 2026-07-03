@@ -10,6 +10,7 @@ import type {
   Priority,
   Project,
   ProjectStatus,
+  Secret,
   Todo,
 } from './types'
 
@@ -272,6 +273,41 @@ export function useDeleteProject() {
       qc.invalidateQueries({ queryKey: ['notes'] })
       qc.invalidateQueries({ queryKey: ['bookmarks'] })
     },
+  })
+}
+
+// ---------- Secrets ----------
+export function useSecrets() {
+  return useQuery({ queryKey: ['secrets'], queryFn: () => api.get<Secret[]>('/api/secrets') })
+}
+
+export function useExpiringSecrets() {
+  return useQuery({ queryKey: ['secrets', 'expiring'], queryFn: () => api.get<Secret[]>('/api/secrets/expiring') })
+}
+
+export function useCreateSecret() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { name: string; clientId?: string; value?: string; expiresOn: string; notes?: string }) =>
+      api.post<Secret>('/api/secrets', body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
+  })
+}
+
+export function useUpdateSecret() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: string; name: string; clientId?: string; value?: string; expiresOn: string; notes?: string }) =>
+      api.put<Secret>(`/api/secrets/${id}`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
+  })
+}
+
+export function useDeleteSecret() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.del(`/api/secrets/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
   })
 }
 

@@ -1,5 +1,5 @@
 // Service worker: right-click context menu + shared save logic.
-importScripts('config.js')
+importScripts('config.js', 'resolve.js')
 
 const MENU_ID = 'save-to-hub'
 
@@ -13,9 +13,17 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== MENU_ID) return
-  // Prefer a right-clicked link; otherwise save the page itself.
-  const url = info.linkUrl || info.pageUrl || tab?.url
-  const title = info.linkUrl ? undefined : tab?.title
+
+  // If a specific link was right-clicked, save exactly that.
+  if (info.linkUrl) { await saveBookmark(info.linkUrl, undefined); return }
+
+  // Otherwise resolve the best target (the in-view LinkedIn post / the article).
+  let url = info.pageUrl || tab?.url
+  let title = tab?.title
+  try {
+    const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: resolveBestLink })
+    if (res?.result?.url) { url = res.result.url; title = res.result.title }
+  } catch { /* fall back to the page URL */ }
   await saveBookmark(url, title)
 })
 

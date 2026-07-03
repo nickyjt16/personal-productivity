@@ -1,191 +1,132 @@
 # Productivity Hub
 
-A personal, local-only productivity app — a small dashboard tying together six lightweight tools:
+A simple personal productivity app that runs **on your own computer**. Your data stays on your
+machine — there's no account, no sign-in, and nothing is sent to the cloud.
 
-- **Todos** — tasks with priority, due date, done state, and full **edit** (title, notes, priority, due date)
-- **Quick-capture inbox** — dump a thought instantly, triage it into a todo later
-- **Bookmarks / read-later** — save links, mark as read; capture from the browser extension or by [forwarding links from Teams on your phone](docs/teams-link-import.md)
-- **Notes** — free-text scratchpad
-- **Pomodoro timer** — 25/5 focus sessions, optionally tied to a task, with a floating always-on-top window
-- **Daily journal** — one dated entry per day
-- **Projects** — group todos, notes, and bookmarks under colour-coded projects (New/Active/Complete/Archived); assign from each item or from the project, with per-list project filters
-- **Settings** — show/hide any section to keep the app focused
+It has:
 
-Single-user and local — no authentication, all data in a local SQLite file on your machine.
+- ✅ **Todos** — tasks with priority and due dates
+- 📥 **Inbox** — jot something down fast, sort it later
+- 🔖 **Bookmarks** — save links to read later (with a browser button — see below)
+- 📝 **Notes** — a simple notepad
+- 📔 **Journal** — one entry per day
+- 📁 **Projects** — group todos, notes and bookmarks together
+- 🔑 **Secrets** — track passwords/keys and their expiry dates; get a warning a week before one expires
+- 🍅 **Pomodoro timer** — a focus timer with a floating always-on-top window
+- 🔎 **Search**, 🌙 **dark mode**, and one-click **backup / restore**
 
-## Two ways to run it
+There are **two versions of the app and they share the same data**, so you can use whichever you like:
 
-There are **two front-ends over one shared database** (`%APPDATA%\ProductivityHub\productivityhub.db`),
-so you can use either and the data stays in sync:
-
-1. **Desktop app (WPF)** — a native Windows app that opens instantly with **no server**. Recommended
-   for everyday use. See [Desktop app](#desktop-app-wpf).
-2. **Web app** — the ASP.NET Core + React version served on `http://localhost:5180`.
-
-## Stack
-
-- **Core:** `ProductivityHub.Core` — shared EF Core 9 entities, `AppDbContext`, schema patch, backup
-  (used by both front-ends).
-- **Desktop:** .NET 9 **WPF** (`ProductivityHub.Desktop`) — talks to SQLite in-process, no server.
-- **API:** ASP.NET Core 9 (attribute controllers) — `ProductivityHub.Api`.
-- **Web:** React 19 + Vite + TypeScript + React Router 7 + TanStack Query + Bootstrap 5.
-- One Kestrel process serves both the API and the built SPA on `http://localhost:5180`.
-
-## Desktop app (WPF)
-
-Native window, opens with a double-click, **no server or localhost**. Same features as the web app —
-todos, inbox, bookmarks, notes, Pomodoro (with an always-on-top mini timer), journal, projects,
-search, dark mode, backup/restore, and Teams link-import — over the shared database.
-
-```powershell
-# Publish a single-file executable
-dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
-
-# (optional) put a shortcut on your Desktop
-powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1
-```
-
-The exe is at `src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish\ProductivityHub.Desktop.exe`
-— double-click it (or the Desktop shortcut). Requires the .NET 9 runtime (add `--self-contained true`
-to the publish command to bundle it and drop that requirement). Set the Teams link-import folder under
-**Settings** in the app.
-
-## Layout
-
-```
-ProductivityHub.sln
-launch.cmd              # starts the app + opens the browser
-create-shortcut.ps1     # one-time: makes a Desktop shortcut to launch.cmd
-extension/              # Chrome/Edge browser extension (save bookmarks)
-src/
-  ProductivityHub.Api/  # API + serves the built SPA from wwwroot
-  ProductivityHub.Web/  # React app (builds into ../ProductivityHub.Api/wwwroot)
-```
+1. **Desktop app** — a normal Windows app that opens in its own window. **Easiest — start here.**
+2. **Web app** — runs in your browser.
 
 ---
 
-## Installation
+## 1. Desktop app (recommended)
 
-### Prerequisites
+### Step 1 — install .NET (one-time)
 
-- [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [Node.js 18+](https://nodejs.org/) (includes npm)
+Download and install the **.NET 9** "Runtime" (or SDK) from Microsoft:
+https://dotnet.microsoft.com/download/dotnet/9.0 — pick **.NET Desktop Runtime 9.0, Windows x64**.
 
-Check they're installed:
+### Step 2 — get this project
 
-```bash
-dotnet --version   # 9.x
-node --version     # v18+ (v22 tested)
+Click the green **Code** button on the GitHub page → **Download ZIP**, then unzip it somewhere
+(e.g. your Documents folder). *(If you know Git, you can instead run
+`git clone https://github.com/nickyjt16/personal-productivity.git`.)*
+
+### Step 3 — build it (one-time)
+
+Open **PowerShell**, go to the project folder, and run this one line:
+
+```powershell
+dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
 ```
 
-### 1. Get the code
+When it finishes, it prints where it put the app. The program is here:
 
-```bash
-git clone https://github.com/nickyjt16/personal-productivity.git
-cd personal-productivity
+```
+src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish\ProductivityHub.Desktop.exe
 ```
 
-### 2. Build the frontend
+### Step 4 — run it
 
-The React app builds into the API's `wwwroot`, so a single process serves everything:
+**Double-click `ProductivityHub.Desktop.exe`.** That's it — the app opens in a window, no server, no
+browser. (Optional: run `powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1`
+to put a shortcut on your Desktop. If Windows shows a blue "Windows protected your PC" box the first
+time, click **More info → Run anyway** — that appears because the app isn't code-signed.)
 
-```bash
-cd src/ProductivityHub.Web
+> **Tip for sharing with someone who isn't technical:** add `--self-contained true` to the Step 3
+> command. That makes a bigger file that includes everything, so they can just double-click it
+> **without installing .NET first**.
+
+---
+
+## 2. Web app
+
+Use this if you prefer working in a browser. It needs two free tools installed once:
+[.NET 9](https://dotnet.microsoft.com/download/dotnet/9.0) and
+[Node.js](https://nodejs.org/) (the "LTS" version).
+
+```powershell
+# from the project folder:
+
+# build the web page (one-time, and whenever the web files change)
+cd src\ProductivityHub.Web
 npm install
 npm run build
-cd ../..
+
+# start the app
+cd ..\..
+dotnet run --project src\ProductivityHub.Api
 ```
 
-### 3. Run the app
-
-```bash
-dotnet run --project src/ProductivityHub.Api
-```
-
-Then open <http://localhost:5180>. A `productivityhub.db` SQLite file is created automatically on
-first run.
-
-### 4. (Optional) One-click desktop launch — Windows
-
-After the first frontend build, create a Desktop shortcut:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\create-shortcut.ps1
-```
-
-Double-click **Productivity Hub** on your Desktop — it starts the app and opens the dashboard.
-Close the launcher window to stop the app. (The shortcut just runs `launch.cmd`, which you can also
-double-click directly.)
+Then open **http://localhost:5180** in your browser. To stop it, close the PowerShell window.
 
 ---
 
-## Browser extension — save bookmarks
+## 3. Browser extension (save links with one click)
 
-The extension in `extension/` adds a toolbar button and a right-click **Save to Productivity Hub**
-menu that send the current page to your read-later list. It's a single Manifest V3 extension that
-works in **both Chrome and Edge** — load the same `extension/` folder into each browser you use.
+A small add-on for **Chrome or Edge** that saves the page you're on to your Bookmarks. Works with both
+browsers — load the same `extension` folder into each.
 
-> The app must be **running** for saves to land. If it isn't, the extension shows a "could not save"
-> notification.
+**Install:**
+1. In your browser go to `chrome://extensions` (Chrome) or `edge://extensions` (Edge).
+2. Turn on **Developer mode** (a switch on the page).
+3. Click **Load unpacked** and choose the **`extension`** folder inside this project.
+4. Pin the new **Productivity Hub** button to your toolbar.
 
-### Install in Google Chrome
+**Use it:** click the toolbar button to save the current page, or **right-click a link → Save to
+Productivity Hub**. The desktop or web app must be running for the save to land.
 
-1. Go to `chrome://extensions`.
-2. Toggle **Developer mode** on (top-right).
-3. Click **Load unpacked**.
-4. Select the `extension/` folder inside this repo.
-5. (Optional) Pin it: click the puzzle-piece icon in the toolbar → pin **Productivity Hub — Save Bookmark**.
-
-### Install in Microsoft Edge
-
-1. Go to `edge://extensions`.
-2. Toggle **Developer mode** on (left sidebar).
-3. Click **Load unpacked**.
-4. Select the `extension/` folder inside this repo.
-5. (Optional) Pin it via the toolbar's extensions (puzzle-piece) menu.
-
-### Using it
-
-- **Toolbar button** — shows the current page; click **Save to read-later**.
-- **Right-click** any page or link → **Save to Productivity Hub**.
-
-A desktop notification confirms the save. If you run the app on a different port, change `HUB_BASE`
-in `extension/config.js` and reload the extension.
+> **LinkedIn tip:** the extension is smart about LinkedIn — clicking the button on your feed saves the
+> **specific post** you're looking at (not just "linkedin.com"). If you want a particular post, scroll
+> so it's the main thing on screen, then click the button. Or right-click the post's timestamp/link →
+> **Save to Productivity Hub**.
 
 ---
 
-## Forwarding links from your phone (via Teams)
+## Your data, backups & secrets
 
-On mobile, send yourself a link in a Teams chat and have it appear in **Bookmarks** automatically.
-A Power Automate flow writes the link to a OneDrive folder that syncs to your PC, and the Hub
-imports it — no authentication needed in the app. Off by default; see
-**[docs/teams-link-import.md](docs/teams-link-import.md)** for the full setup (folder, `LinkImport`
-config, and the flow). Once configured, links arrive on a timer or via the **↻ Check for new links**
-button on the Bookmarks page.
+- Everything is stored in a single file on your PC: `%APPDATA%\ProductivityHub\productivityhub.db`
+  (both the desktop and web app use it, which is why they stay in sync).
+- The desktop app makes an automatic copy of that file each time it starts (in a `backups` folder next
+  to it), so you're protected against accidents.
+- **Settings → Backup & restore** lets you export everything to a file, or restore from one — handy for
+  moving to a new PC.
+- **Secrets** are stored locally in that same file, in plain text. It never leaves your machine and
+  isn't part of what's shared on GitHub, but treat the file itself as sensitive.
 
----
+## Automatic link forwarding from Teams (optional, advanced)
 
-## Floating Pomodoro timer
+If you use Microsoft Teams, you can have links you send yourself appear in Bookmarks automatically —
+see [docs/teams-link-import.md](docs/teams-link-import.md).
 
-Press **Start** and the timer pops out into a small always-on-top floating window (Chrome/Edge 116+,
-via the Document Picture-in-Picture API) showing the countdown plus **Pause/Resume**, **Restart**, and
-**Reopen app** buttons. When the session finishes, the floating window closes, the app tab is
-refocused, and you get a desktop notification + a chime. On browsers without Document PiP, the timer
-stays in-page. (Allow notifications when first prompted.)
+## For developers
 
----
-
-## Development
-
-Run the API and the Vite dev server separately for hot-reload (Vite proxies `/api` to the API):
-
-```bash
-# Terminal 1 — API on http://localhost:5180
-dotnet run --project src/ProductivityHub.Api
-
-# Terminal 2 — Vite dev server on http://localhost:5173
-cd src/ProductivityHub.Web && npm run dev
-```
-
-Rebuild the production bundle (`npm run build`) only when you want the single-process app on `:5180`
-to reflect frontend changes — the API serves whatever is in `wwwroot`.
+- **Core** (`ProductivityHub.Core`): shared data layer (EF Core 9 + SQLite) used by both apps.
+- **Desktop** (`ProductivityHub.Desktop`): .NET 9 WPF, in-process, no server.
+- **API** (`ProductivityHub.Api`): ASP.NET Core 9, serves the built React SPA + JSON API.
+- **Web** (`ProductivityHub.Web`): React 19 + Vite + TypeScript + Bootstrap 5.
+- Tests: `dotnet test`. CI (GitHub Actions) builds Core/API/web + runs tests on every push (the
+  Windows-only WPF app is built locally).

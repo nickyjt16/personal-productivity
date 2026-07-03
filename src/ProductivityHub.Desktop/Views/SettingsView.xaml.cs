@@ -15,7 +15,7 @@ public partial class SettingsView : UserControl
     {
         ("todos", "✅  Todos"), ("inbox", "📥  Inbox"), ("bookmarks", "🔖  Bookmarks"),
         ("notes", "📝  Notes"), ("journal", "📔  Journal"), ("projects", "📁  Projects"),
-        ("pomodoro", "🍅  Pomodoro"),
+        ("secrets", "🔑  Secrets"), ("pomodoro", "🍅  Pomodoro"),
     };
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -93,7 +93,8 @@ public partial class SettingsView : UserControl
             await db.Projects.AsNoTracking().ToListAsync(),
             await db.TodoProjects.AsNoTracking().ToListAsync(),
             await db.NoteProjects.AsNoTracking().ToListAsync(),
-            await db.BookmarkProjects.AsNoTracking().ToListAsync());
+            await db.BookmarkProjects.AsNoTracking().ToListAsync(),
+            await db.Secrets.AsNoTracking().ToListAsync());
 
         await File.WriteAllTextAsync(dlg.FileName, JsonSerializer.Serialize(backup, Json));
         ShowStatus("Backup exported.");
@@ -124,8 +125,10 @@ public partial class SettingsView : UserControl
             await db.Notes.ExecuteDeleteAsync();
             await db.JournalEntries.ExecuteDeleteAsync();
             await db.Projects.ExecuteDeleteAsync();
+            await db.Secrets.ExecuteDeleteAsync();
 
             db.Projects.AddRange(backup.Projects ?? []);
+            db.Secrets.AddRange(backup.Secrets ?? []);
             db.Todos.AddRange(backup.Todos ?? []);
             db.Notes.AddRange(backup.Notes ?? []);
             db.Bookmarks.AddRange(backup.Bookmarks ?? []);
@@ -157,6 +160,7 @@ public partial class SettingsView : UserControl
         await db.Notes.ExecuteDeleteAsync();
         await db.JournalEntries.ExecuteDeleteAsync();
         await db.Projects.ExecuteDeleteAsync();
+        await db.Secrets.ExecuteDeleteAsync();
         ShowStatus("All data cleared.");
     }
 

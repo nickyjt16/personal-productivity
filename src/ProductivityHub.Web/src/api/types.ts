@@ -71,6 +71,16 @@ export interface JournalEntry {
   updatedAt: string
 }
 
+export interface Secret {
+  id: string
+  name: string
+  clientId: string | null
+  value: string | null
+  expiresOn: string
+  notes: string | null
+  daysLeft: number
+}
+
 export interface PomodoroSession {
   id: string
   todoItemId: string | null

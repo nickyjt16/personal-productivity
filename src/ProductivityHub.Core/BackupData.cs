@@ -16,4 +16,5 @@ public record BackupData(
     List<Project> Projects,
     List<TodoProject> TodoProjects,
     List<NoteProject> NoteProjects,
-    List<BookmarkProject> BookmarkProjects);
+    List<BookmarkProject> BookmarkProjects,
+    List<Secret>? Secrets = null);

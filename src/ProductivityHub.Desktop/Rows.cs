@@ -109,3 +109,29 @@ public class LinkRow
     public required Guid Id { get; init; }
     public required string Label { get; init; }
 }
+
+public class SecretRow
+{
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public string? ClientId { get; init; }
+    public string? Value { get; init; }
+    public DateOnly ExpiresOn { get; init; }
+    public string? Notes { get; init; }
+
+    public int DaysLeft => ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Now.Date).DayNumber;
+    public string ExpiresText => ExpiresOn.ToString("d", CultureInfo.CurrentCulture);
+    public bool HasClientId => !string.IsNullOrWhiteSpace(ClientId);
+    public bool HasNotes => !string.IsNullOrWhiteSpace(Notes);
+    public bool HasValue => !string.IsNullOrWhiteSpace(Value);
+    public string ValueMasked => "••••••••";
+
+    public string BadgeText => DaysLeft < 0 ? $"Expired {-DaysLeft}d ago"
+        : DaysLeft == 0 ? "Expires today"
+        : DaysLeft <= 7 ? $"Expires in {DaysLeft}d"
+        : $"{DaysLeft}d left";
+
+    public Brush BadgeBrush => DaysLeft <= 0 ? Palette.FromHex("#DC3545")
+        : DaysLeft <= 7 ? Palette.FromHex("#FFC107")
+        : Palette.FromHex("#6C757D");
+}

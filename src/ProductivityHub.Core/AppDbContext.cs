@@ -13,6 +13,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<JournalEntry> JournalEntries => Set<JournalEntry>();
     public DbSet<PomodoroSession> PomodoroSessions => Set<PomodoroSession>();
     public DbSet<Project> Projects => Set<Project>();
+    public DbSet<Secret> Secrets => Set<Secret>();
     public DbSet<TodoProject> TodoProjects => Set<TodoProject>();
     public DbSet<NoteProject> NoteProjects => Set<NoteProject>();
     public DbSet<BookmarkProject> BookmarkProjects => Set<BookmarkProject>();
