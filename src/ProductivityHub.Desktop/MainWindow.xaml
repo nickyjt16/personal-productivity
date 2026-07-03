@@ -32,8 +32,9 @@
                          KeyDown="SearchBox_KeyDown" />
                 <TextBlock DockPanel.Dock="Top" Text="Search, then press Enter"
                            Foreground="{DynamicResource MutedBrush}" FontSize="10" Margin="2,0,0,12" />
-                <Button DockPanel.Dock="Bottom" Content="⚙  Settings"
-                        Style="{StaticResource NavButton}" Click="Settings_Click" />
+                <Button DockPanel.Dock="Bottom" Style="{StaticResource NavButton}" Click="Settings_Click">
+                    <TextBlock Text="⚙  Settings" Foreground="White" />
+                </Button>
                 <StackPanel x:Name="NavPanel" />
             </DockPanel>
         </Border>

@@ -41,7 +41,13 @@ public partial class MainWindow : Window
             if (s.Key != "dashboard" && !App.Settings.IsVisible(s.Key)) continue;
             var btn = new Button
             {
-                Content = s.Label,
+                // Explicit white TextBlock so the text colour is never lost to
+                // WPF's Foreground-through-template quirks.
+                Content = new System.Windows.Controls.TextBlock
+                {
+                    Text = s.Label,
+                    Foreground = System.Windows.Media.Brushes.White,
+                },
                 Style = (Style)FindResource("NavButton"),
                 Tag = s.Key,
             };
