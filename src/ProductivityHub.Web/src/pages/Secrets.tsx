@@ -21,10 +21,11 @@ export default function Secrets() {
   const [value, setValue] = useState('')
   const [expiresOn, setExpiresOn] = useState('')
   const [notes, setNotes] = useState('')
+  const [notify, setNotify] = useState('')
   const [reveal, setReveal] = useState<Record<string, boolean>>({})
 
   function reset() {
-    setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn(''); setNotes('')
+    setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn(''); setNotes(''); setNotify('')
   }
 
   function save(e: React.FormEvent) {
@@ -33,6 +34,7 @@ export default function Secrets() {
     const body = {
       name: name.trim(), clientId: clientId.trim() || undefined, value: value || undefined,
       expiresOn, notes: notes.trim() || undefined,
+      notify: notify.split('\n').map((x) => x.trim()).filter(Boolean),
     }
     if (editingId) update.mutate({ id: editingId, ...body }, { onSuccess: reset })
     else create.mutate(body, { onSuccess: reset })
@@ -40,7 +42,7 @@ export default function Secrets() {
 
   function edit(s: Secret) {
     setEditingId(s.id); setName(s.name); setClientId(s.clientId ?? ''); setValue(s.value ?? '')
-    setExpiresOn(s.expiresOn.slice(0, 10)); setNotes(s.notes ?? '')
+    setExpiresOn(s.expiresOn.slice(0, 10)); setNotes(s.notes ?? ''); setNotify(s.notify.join('\n'))
   }
 
   return (
@@ -80,6 +82,12 @@ export default function Secrets() {
             <input className="form-control" value={notes} placeholder="Notes (optional)"
               onChange={(e) => setNotes(e.target.value)} />
           </div>
+          <div className="col-12">
+            <label className="form-label">Who to inform when this changes (one per line)</label>
+            <textarea className="form-control" rows={2} value={notify}
+              placeholder="e.g. jane@example.com&#10;Platform Team&#10;#secrets-channel"
+              onChange={(e) => setNotify(e.target.value)} />
+          </div>
         </div>
       </form>
 
@@ -105,6 +113,14 @@ export default function Secrets() {
                       </div>
                     )}
                     {s.notes && <div className="small text-muted">{s.notes}</div>}
+                    {s.notify.length > 0 && (
+                      <div className="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                        <span className="small text-muted">Notify:</span>
+                        {s.notify.map((n, i) => (
+                          <span key={i} className="badge rounded-pill text-bg-secondary">{n}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <span className="badge text-bg-light text-muted">{new Date(s.expiresOn).toLocaleDateString()}</span>
                   <span className={`badge text-bg-${badge.variant}`}>{badge.label}</span>

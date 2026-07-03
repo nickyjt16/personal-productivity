@@ -118,6 +118,10 @@ public class SecretRow
     public string? Value { get; init; }
     public DateOnly ExpiresOn { get; init; }
     public string? Notes { get; init; }
+    public string? NotifyRaw { get; init; }
+    public bool HasNotify => !string.IsNullOrWhiteSpace(NotifyRaw);
+    public string NotifyText => "Notify: " + string.Join(", ",
+        (NotifyRaw ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 
     public int DaysLeft => ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Now.Date).DayNumber;
     public string ExpiresText => ExpiresOn.ToString("d", CultureInfo.CurrentCulture);

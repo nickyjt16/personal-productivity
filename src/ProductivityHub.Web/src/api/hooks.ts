@@ -288,7 +288,7 @@ export function useExpiringSecrets() {
 export function useCreateSecret() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: { name: string; clientId?: string; value?: string; expiresOn: string; notes?: string }) =>
+    mutationFn: (body: { name: string; clientId?: string; value?: string; expiresOn: string; notes?: string; notify?: string[] }) =>
       api.post<Secret>('/api/secrets', body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
   })
@@ -297,7 +297,7 @@ export function useCreateSecret() {
 export function useUpdateSecret() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: string; name: string; clientId?: string; value?: string; expiresOn: string; notes?: string }) =>
+    mutationFn: ({ id, ...body }: { id: string; name: string; clientId?: string; value?: string; expiresOn: string; notes?: string; notify?: string[] }) =>
       api.put<Secret>(`/api/secrets/${id}`, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
   })

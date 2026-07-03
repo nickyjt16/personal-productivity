@@ -10,13 +10,23 @@ namespace ProductivityHub.Api.Controllers;
 public class SecretsController(AppDbContext db) : ControllerBase
 {
     public record SecretDto(Guid Id, string Name, string? ClientId, string? Value,
-        DateOnly ExpiresOn, string? Notes, int DaysLeft);
+        DateOnly ExpiresOn, string? Notes, List<string> Notify, int DaysLeft);
 
-    public record SaveSecretRequest(string Name, string? ClientId, string? Value, DateOnly ExpiresOn, string? Notes);
+    public record SaveSecretRequest(string Name, string? ClientId, string? Value, DateOnly ExpiresOn,
+        string? Notes, List<string>? Notify);
 
     private static SecretDto ToDto(Secret s) =>
-        new(s.Id, s.Name, s.ClientId, s.Value, s.ExpiresOn, s.Notes,
+        new(s.Id, s.Name, s.ClientId, s.Value, s.ExpiresOn, s.Notes, SplitNotify(s.NotifyList),
             s.ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber);
+
+    private static List<string> SplitNotify(string? raw) =>
+        (raw ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+    private static string? JoinNotify(List<string>? list)
+    {
+        var clean = (list ?? []).Select(x => x.Trim()).Where(x => x.Length > 0).ToList();
+        return clean.Count == 0 ? null : string.Join("\n", clean);
+    }
 
     [HttpGet]
     public async Task<IActionResult> List(CancellationToken ct)
@@ -48,6 +58,7 @@ public class SecretsController(AppDbContext db) : ControllerBase
             Value = string.IsNullOrWhiteSpace(req.Value) ? null : req.Value,
             ExpiresOn = req.ExpiresOn,
             Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim(),
+            NotifyList = JoinNotify(req.Notify),
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -67,6 +78,7 @@ public class SecretsController(AppDbContext db) : ControllerBase
         s.Value = string.IsNullOrWhiteSpace(req.Value) ? null : req.Value;
         s.ExpiresOn = req.ExpiresOn;
         s.Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
+        s.NotifyList = JoinNotify(req.Notify);
         s.UpdatedAt = DateTimeOffset.UtcNow;
         await db.SaveChangesAsync(ct);
         return Ok(ToDto(s));

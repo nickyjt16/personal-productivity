@@ -59,11 +59,27 @@ public static class SchemaUpdater
                 "Value" TEXT NULL,
                 "ExpiresOn" TEXT NOT NULL,
                 "Notes" TEXT NULL,
+                "NotifyList" TEXT NULL,
                 "CreatedAt" INTEGER NOT NULL,
                 "UpdatedAt" INTEGER NOT NULL
             );
             """;
 
         await db.Database.ExecuteSqlRawAsync(sql, ct);
+
+        // Columns added to existing tables after their initial creation.
+        await AddColumnIfMissingAsync(db, "Secrets", "NotifyList", "TEXT", ct);
+    }
+
+    // Idempotent ALTER TABLE ADD COLUMN — SQLite can't do "IF NOT EXISTS" for
+    // columns, so we check pragma_table_info first.
+    private static async Task AddColumnIfMissingAsync(AppDbContext db, string table, string column, string type,
+        CancellationToken ct)
+    {
+        var columns = await db.Database
+            .SqlQueryRaw<string>($"SELECT name AS \"Value\" FROM pragma_table_info('{table}')")
+            .ToListAsync(ct);
+        if (!columns.Contains(column))
+            await db.Database.ExecuteSqlRawAsync($"ALTER TABLE \"{table}\" ADD COLUMN \"{column}\" {type}", ct);
     }
 }

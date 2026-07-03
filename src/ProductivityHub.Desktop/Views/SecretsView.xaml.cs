@@ -17,6 +17,7 @@ public partial class SecretsView : UserControl
         ExpiresBox.ToolTip = "Expires on";
         ValueBox.ToolTip = "Secret value (optional)";
         NotesBox.ToolTip = "Notes (optional)";
+        NotifyBox.ToolTip = "Who to inform when this changes (one per line)";
         Loaded += async (_, _) => await LoadAsync();
     }
 
@@ -27,7 +28,7 @@ public partial class SecretsView : UserControl
         ItemsHost.ItemsSource = secrets.Select(s => new SecretRow
         {
             Id = s.Id, Name = s.Name, ClientId = s.ClientId, Value = s.Value,
-            ExpiresOn = s.ExpiresOn, Notes = s.Notes,
+            ExpiresOn = s.ExpiresOn, Notes = s.Notes, NotifyRaw = s.NotifyList,
         }).ToList();
     }
 
@@ -43,6 +44,8 @@ public partial class SecretsView : UserControl
         var clientId = string.IsNullOrWhiteSpace(ClientBox.Text) ? null : ClientBox.Text.Trim();
         var value = string.IsNullOrWhiteSpace(ValueBox.Text) ? null : ValueBox.Text;
         var notes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim();
+        var notifyParts = NotifyBox.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        var notify = notifyParts.Length == 0 ? null : string.Join("\n", notifyParts);
         var now = DateTimeOffset.UtcNow;
 
         await using (var db = Db.Context())
@@ -53,7 +56,7 @@ public partial class SecretsView : UserControl
                 if (s != null)
                 {
                     s.Name = name; s.ClientId = clientId; s.Value = value; s.ExpiresOn = expires;
-                    s.Notes = notes; s.UpdatedAt = now;
+                    s.Notes = notes; s.NotifyList = notify; s.UpdatedAt = now;
                     await db.SaveChangesAsync();
                 }
             }
@@ -62,7 +65,7 @@ public partial class SecretsView : UserControl
                 db.Secrets.Add(new Secret
                 {
                     Id = Guid.NewGuid(), Name = name, ClientId = clientId, Value = value,
-                    ExpiresOn = expires, Notes = notes, CreatedAt = now, UpdatedAt = now,
+                    ExpiresOn = expires, Notes = notes, NotifyList = notify, CreatedAt = now, UpdatedAt = now,
                 });
                 await db.SaveChangesAsync();
             }
@@ -79,6 +82,7 @@ public partial class SecretsView : UserControl
         ClientBox.Text = row.ClientId ?? "";
         ValueBox.Text = row.Value ?? "";
         NotesBox.Text = row.Notes ?? "";
+        NotifyBox.Text = row.NotifyRaw ?? "";
         ExpiresBox.SelectedDate = row.ExpiresOn.ToDateTime(TimeOnly.MinValue);
         AddBtn.Content = "Save";
         CancelBtn.Visibility = Visibility.Visible;
@@ -89,7 +93,7 @@ public partial class SecretsView : UserControl
     private void Reset()
     {
         _editingId = null;
-        NameBox.Text = ""; ClientBox.Text = ""; ValueBox.Text = ""; NotesBox.Text = "";
+        NameBox.Text = ""; ClientBox.Text = ""; ValueBox.Text = ""; NotesBox.Text = ""; NotifyBox.Text = "";
         ExpiresBox.SelectedDate = null;
         AddBtn.Content = "Add";
         CancelBtn.Visibility = Visibility.Collapsed;

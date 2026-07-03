@@ -90,6 +90,8 @@ public class Secret
     public string? Value { get; set; }
     public DateOnly ExpiresOn { get; set; }
     public string? Notes { get; set; }
+    // People/teams to inform when this secret changes — stored newline-separated.
+    public string? NotifyList { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 }

@@ -78,6 +78,7 @@ export interface Secret {
   value: string | null
   expiresOn: string
   notes: string | null
+  notify: string[]
   daysLeft: number
 }
 
