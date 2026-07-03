@@ -45,6 +45,35 @@ public partial class SettingsView : UserControl
             };
             SectionPanel.Children.Add(cb);
         }
+
+        DbPathText.Text = AppPaths.DatabasePath + (AppPaths.ConfiguredLocation is null ? "  (default)" : "  (custom)");
+    }
+
+    private void MoveDb_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFolderDialog { Title = "Choose a folder to keep the database in (e.g. a OneDrive folder)" };
+        if (dlg.ShowDialog() != true) return;
+        var target = Path.Combine(dlg.FolderName, "productivityhub.db");
+        try
+        {
+            var current = AppPaths.DatabasePath;
+            if (File.Exists(current) && !File.Exists(target)) File.Copy(current, target);
+            AppPaths.SetDatabaseLocation(target);
+            DbPathText.Text = target + "  (custom)";
+            MessageBox.Show($"Database location set to:\n{target}\n\nRestart Productivity Hub (and the web app, if you use it) to apply.",
+                "Data location");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Couldn't set the location: " + ex.Message, "Data location");
+        }
+    }
+
+    private void DefaultDb_Click(object sender, RoutedEventArgs e)
+    {
+        AppPaths.SetDatabaseLocation(null);
+        DbPathText.Text = AppPaths.DatabasePath + "  (default)";
+        MessageBox.Show("Reverted to the default location. Restart the app to apply.", "Data location");
     }
 
     private void Dark_Click(object sender, RoutedEventArgs e)

@@ -5,7 +5,7 @@ machine — there's no account, no sign-in, and nothing is sent to the cloud.
 
 It has:
 
-- ✅ **Todos** — tasks with priority and due dates
+- ✅ **Todos** — tasks with priority, due dates, and optional **repeat** (daily/weekly/monthly)
 - 📥 **Inbox** — jot something down fast, sort it later
 - 🔖 **Bookmarks** — save links to read later (with a browser button — see below)
 - 📝 **Notes** — a simple notepad
@@ -14,6 +14,13 @@ It has:
 - 🔑 **Secrets** — track passwords/keys and their expiry dates; get a warning a week before one expires
 - 🍅 **Pomodoro timer** — a focus timer with a floating always-on-top window
 - 🔎 **Search**, 🌙 **dark mode**, and one-click **backup / restore**
+
+The **desktop app** adds a few extras:
+
+- 🔔 **Reminders on launch** — a heads-up for todos due today/overdue and secrets expiring soon
+- ⚡ **Quick capture** — press **Ctrl+Alt+N** anywhere to drop a thought into your Inbox without switching windows
+- 📌 **Lives in the tray** — closing the window keeps it running in the notification area; right-click the tray icon to open, quick-capture, or quit
+- ☁️ **Optional sync** — in Settings you can move the data file into OneDrive (or any folder) to share it between machines; **off by default**, everything stays local until you turn it on
 
 There are **two versions of the app and they share the same data**, so you can use whichever you like:
 

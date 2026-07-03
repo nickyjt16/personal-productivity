@@ -12,16 +12,26 @@ public class TodosController(AppDbContext db) : ControllerBase
 {
     public record TodoDto(Guid Id, string Title, string? Notes, Priority Priority, bool IsDone,
         DateTimeOffset? DueDate, DateTimeOffset CreatedAt, DateTimeOffset? CompletedAt,
-        List<ProjectRef> Projects);
+        RecurUnit RecurUnit, int RecurInterval, List<ProjectRef> Projects);
 
-    public record CreateTodoRequest(string Title, string? Notes, Priority? Priority, DateTimeOffset? DueDate);
+    public record CreateTodoRequest(string Title, string? Notes, Priority? Priority, DateTimeOffset? DueDate,
+        RecurUnit? RecurUnit, int? RecurInterval);
 
     public record UpdateTodoRequest(string Title, string? Notes, Priority Priority,
-        bool IsDone, DateTimeOffset? DueDate);
+        bool IsDone, DateTimeOffset? DueDate, RecurUnit? RecurUnit, int? RecurInterval);
 
     private static TodoDto ToDto(TodoItem t) =>
         new(t.Id, t.Title, t.Notes, t.Priority, t.IsDone, t.DueDate, t.CreatedAt, t.CompletedAt,
+            t.RecurUnit, t.RecurInterval,
             t.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList());
+
+    private static DateTimeOffset Advance(DateTimeOffset from, RecurUnit unit, int interval) => unit switch
+    {
+        RecurUnit.Day => from.AddDays(interval),
+        RecurUnit.Week => from.AddDays(7 * interval),
+        RecurUnit.Month => from.AddMonths(interval),
+        _ => from,
+    };
 
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] bool? done, [FromQuery] Guid? projectId, CancellationToken ct)
@@ -57,6 +67,8 @@ public class TodosController(AppDbContext db) : ControllerBase
             Notes = req.Notes,
             Priority = req.Priority ?? Priority.Medium,
             DueDate = req.DueDate,
+            RecurUnit = req.RecurUnit ?? RecurUnit.None,
+            RecurInterval = req.RecurInterval ?? 0,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         db.Todos.Add(todo);
@@ -74,6 +86,8 @@ public class TodosController(AppDbContext db) : ControllerBase
         todo.Notes = req.Notes;
         todo.Priority = req.Priority;
         todo.DueDate = req.DueDate;
+        todo.RecurUnit = req.RecurUnit ?? RecurUnit.None;
+        todo.RecurInterval = req.RecurInterval ?? 0;
         SetDone(todo, req.IsDone);
 
         await db.SaveChangesAsync(ct);
@@ -86,7 +100,17 @@ public class TodosController(AppDbContext db) : ControllerBase
         var todo = await db.Todos.FindAsync([id], ct);
         if (todo is null) return NotFound();
 
-        SetDone(todo, !todo.IsDone);
+        // Completing a recurring todo advances its due date instead of closing it.
+        if (!todo.IsDone && todo.RecurUnit != RecurUnit.None && todo.RecurInterval > 0)
+        {
+            var baseDate = todo.DueDate ?? DateTimeOffset.UtcNow;
+            todo.DueDate = Advance(baseDate, todo.RecurUnit, todo.RecurInterval);
+        }
+        else
+        {
+            SetDone(todo, !todo.IsDone);
+        }
+
         await db.SaveChangesAsync(ct);
         return Ok(ToDto(todo));
     }

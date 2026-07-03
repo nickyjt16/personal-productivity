@@ -53,6 +53,8 @@ public partial class TodosView : UserControl
             IsDone = t.IsDone,
             Priority = t.Priority,
             DueDate = t.DueDate,
+            RecurUnit = t.RecurUnit,
+            RecurInterval = t.RecurInterval,
             ProjectTags = t.ProjectLinks.Count == 0 ? "" : "🏷 " + string.Join(", ", t.ProjectLinks.Select(l => l.Project!.Name)),
         }).ToList();
     }
@@ -71,6 +73,8 @@ public partial class TodosView : UserControl
         var priority = Enum.Parse<Priority>((string?)PriorityBox.SelectedItem ?? "Medium");
         DateTimeOffset? due = DueBox.SelectedDate is DateTime d ? new DateTimeOffset(d) : null;
         var notes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim();
+        var recur = GetRepeatUnit();
+        var recurInterval = recur == RecurUnit.None ? 0 : 1;
 
         await using (var db = Db.Context())
         {
@@ -80,6 +84,7 @@ public partial class TodosView : UserControl
                 if (t != null)
                 {
                     t.Title = title; t.Notes = notes; t.Priority = priority; t.DueDate = due;
+                    t.RecurUnit = recur; t.RecurInterval = recurInterval;
                     await db.SaveChangesAsync();
                 }
             }
@@ -88,7 +93,8 @@ public partial class TodosView : UserControl
                 db.Todos.Add(new TodoItem
                 {
                     Id = Guid.NewGuid(), Title = title, Notes = notes, Priority = priority,
-                    DueDate = due, CreatedAt = DateTimeOffset.UtcNow,
+                    DueDate = due, RecurUnit = recur, RecurInterval = recurInterval,
+                    CreatedAt = DateTimeOffset.UtcNow,
                 });
                 await db.SaveChangesAsync();
             }
@@ -105,6 +111,7 @@ public partial class TodosView : UserControl
         NotesBox.Text = row.Notes ?? "";
         PriorityBox.SelectedItem = row.Priority.ToString();
         DueBox.SelectedDate = row.DueDate?.DateTime;
+        SetRepeatUnit(row.RecurUnit);
         AddBtn.Content = "Save";
         CancelBtn.Visibility = Visibility.Visible;
     }
@@ -118,8 +125,24 @@ public partial class TodosView : UserControl
         NotesBox.Text = "";
         PriorityBox.SelectedItem = "Medium";
         DueBox.SelectedDate = null;
+        RepeatCombo.SelectedIndex = 0;
         AddBtn.Content = "Add";
         CancelBtn.Visibility = Visibility.Collapsed;
+    }
+
+    private RecurUnit GetRepeatUnit()
+    {
+        var tag = (RepeatCombo.SelectedItem as ComboBoxItem)?.Tag as string;
+        return Enum.TryParse<RecurUnit>(tag, out var u) ? u : RecurUnit.None;
+    }
+
+    private void SetRepeatUnit(RecurUnit unit)
+    {
+        foreach (var item in RepeatCombo.Items.OfType<ComboBoxItem>())
+        {
+            if ((item.Tag as string) == unit.ToString()) { RepeatCombo.SelectedItem = item; return; }
+        }
+        RepeatCombo.SelectedIndex = 0;
     }
 
     private async void Toggle_Click(object sender, RoutedEventArgs e)
@@ -130,8 +153,23 @@ public partial class TodosView : UserControl
             var t = await db.Todos.FindAsync(row.Id);
             if (t != null)
             {
-                t.IsDone = !t.IsDone;
-                t.CompletedAt = t.IsDone ? DateTimeOffset.UtcNow : null;
+                if (!t.IsDone && t.RecurUnit != RecurUnit.None && t.RecurInterval > 0)
+                {
+                    // Completing a recurring todo advances its due date instead of closing it.
+                    var baseDate = t.DueDate ?? DateTimeOffset.UtcNow;
+                    t.DueDate = t.RecurUnit switch
+                    {
+                        RecurUnit.Day => baseDate.AddDays(t.RecurInterval),
+                        RecurUnit.Week => baseDate.AddDays(7 * t.RecurInterval),
+                        RecurUnit.Month => baseDate.AddMonths(t.RecurInterval),
+                        _ => baseDate,
+                    };
+                }
+                else
+                {
+                    t.IsDone = !t.IsDone;
+                    t.CompletedAt = t.IsDone ? DateTimeOffset.UtcNow : null;
+                }
                 await db.SaveChangesAsync();
             }
         }

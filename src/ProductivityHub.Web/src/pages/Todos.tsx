@@ -7,7 +7,7 @@ import {
   useToggleTodo,
   useUpdateTodo,
 } from '../api/hooks'
-import type { Priority, Todo } from '../api/types'
+import type { Priority, RecurUnit, Todo } from '../api/types'
 import ProjectBadges from '../components/ProjectBadges'
 import ProjectFilter from '../components/ProjectFilter'
 import ProjectPicker from '../components/ProjectPicker'
@@ -15,6 +15,13 @@ import { dueBadge } from '../util/due'
 import { priorityVariant } from '../util/priority'
 
 const priorities: Priority[] = ['Low', 'Medium', 'High']
+const recurUnits: RecurUnit[] = ['None', 'Day', 'Week', 'Month']
+
+function recurLabel(unit: RecurUnit, interval: number): string | null {
+  if (unit === 'None' || interval < 1) return null
+  const u = unit.toLowerCase()
+  return interval === 1 ? `🔁 every ${u}` : `🔁 every ${interval} ${u}s`
+}
 
 // Convert an ISO timestamp to the yyyy-MM-dd value a <input type="date"> expects.
 function toDateInput(iso: string | null): string {
@@ -31,14 +38,18 @@ export default function Todos() {
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState<Priority>('Medium')
   const [dueDate, setDueDate] = useState('')
+  const [repeat, setRepeat] = useState<RecurUnit>('None')
   const [editingId, setEditingId] = useState<string | null>(null)
 
   function add(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) return
     create.mutate(
-      { title: title.trim(), priority, dueDate: dueDate || undefined },
-      { onSuccess: () => { setTitle(''); setDueDate('') } },
+      {
+        title: title.trim(), priority, dueDate: dueDate || undefined,
+        recurUnit: repeat, recurInterval: repeat === 'None' ? 0 : 1,
+      },
+      { onSuccess: () => { setTitle(''); setDueDate(''); setRepeat('None') } },
     )
   }
 
@@ -67,6 +78,16 @@ export default function Todos() {
             <label className="form-label">Due</label>
             <input type="date" className="form-control" value={dueDate}
               onChange={(e) => setDueDate(e.target.value)} />
+          </div>
+          <div className="col-auto">
+            <label className="form-label">Repeat</label>
+            <select className="form-select" value={repeat}
+              onChange={(e) => setRepeat(e.target.value as RecurUnit)}>
+              <option value="None">No repeat</option>
+              <option value="Day">Daily</option>
+              <option value="Week">Weekly</option>
+              <option value="Month">Monthly</option>
+            </select>
           </div>
           <div className="col-auto">
             <button className="btn btn-primary" disabled={create.isPending}>Add</button>
@@ -98,6 +119,9 @@ export default function Todos() {
                     const due = dueBadge(t.dueDate, t.isDone)
                     return due ? <span className={`badge text-bg-${due.variant}`}>{due.label}</span> : null
                   })()}
+                  {recurLabel(t.recurUnit, t.recurInterval) && (
+                    <span className="badge text-bg-light text-muted">{recurLabel(t.recurUnit, t.recurInterval)}</span>
+                  )}
                   <button className="btn btn-sm btn-outline-secondary" title="Edit"
                     onClick={() => setEditingId(t.id)}>✎</button>
                   <button className="btn btn-sm btn-outline-danger" title="Delete"
@@ -119,6 +143,8 @@ function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
   const [notes, setNotes] = useState(todo.notes ?? '')
   const [priority, setPriority] = useState<Priority>(todo.priority)
   const [dueDate, setDueDate] = useState(toDateInput(todo.dueDate))
+  const [recurUnit, setRecurUnit] = useState<RecurUnit>(todo.recurUnit)
+  const [recurInterval, setRecurInterval] = useState(todo.recurInterval || 1)
   const [projectIds, setProjectIds] = useState<string[]>(todo.projects.map((p) => p.id))
 
   function save(e: React.FormEvent) {
@@ -132,6 +158,8 @@ function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
         priority,
         isDone: todo.isDone,
         dueDate: dueDate || null,
+        recurUnit,
+        recurInterval: recurUnit === 'None' ? 0 : Math.max(1, recurInterval),
       },
       { onSuccess: () => setProjects.mutate({ id: todo.id, projectIds }, { onSuccess: onClose }) },
     )
@@ -156,6 +184,20 @@ function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
           <label className="form-label small">Due</label>
           <input type="date" className="form-control" value={dueDate}
             onChange={(e) => setDueDate(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <label className="form-label small">Repeat every</label>
+          <div className="d-flex gap-1">
+            <input type="number" min={1} className="form-control" style={{ width: 70 }} value={recurInterval}
+              disabled={recurUnit === 'None'} onChange={(e) => setRecurInterval(Number(e.target.value))} />
+            <select className="form-select" value={recurUnit}
+              onChange={(e) => setRecurUnit(e.target.value as RecurUnit)}>
+              <option value="None">— no repeat —</option>
+              {recurUnits.filter((u) => u !== 'None').map((u) => (
+                <option key={u} value={u}>{u.toLowerCase()}(s)</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
       <div className="mt-2">

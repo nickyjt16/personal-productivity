@@ -1,4 +1,5 @@
 export type Priority = 'Low' | 'Medium' | 'High'
+export type RecurUnit = 'None' | 'Day' | 'Week' | 'Month'
 export type PomodoroKind = 'Focus' | 'ShortBreak' | 'LongBreak'
 export type ProjectStatus = 'New' | 'Active' | 'Complete' | 'Archived'
 
@@ -32,6 +33,8 @@ export interface Todo {
   dueDate: string | null
   createdAt: string
   completedAt: string | null
+  recurUnit: RecurUnit
+  recurInterval: number
   projects: ProjectRef[]
 }
 

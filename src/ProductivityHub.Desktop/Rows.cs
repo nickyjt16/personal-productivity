@@ -50,6 +50,12 @@ public class TodoRow
     public Brush DueBrush => Palette.FromHex(DueBadge?.color ?? "#6C757D");
     public bool HasProjects => !string.IsNullOrEmpty(ProjectTags);
     public string ProjectTags { get; init; } = "";
+    public RecurUnit RecurUnit { get; init; }
+    public int RecurInterval { get; init; }
+    public bool HasRecur => RecurUnit != RecurUnit.None && RecurInterval > 0;
+    public string RecurText => !HasRecur ? "" :
+        RecurInterval == 1 ? $"🔁 every {RecurUnit.ToString().ToLowerInvariant()}"
+        : $"🔁 every {RecurInterval} {RecurUnit.ToString().ToLowerInvariant()}s";
 
     private (string label, string color)? DueBadge => DueInfo(DueDate, IsDone);
 

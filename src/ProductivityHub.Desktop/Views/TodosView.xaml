@@ -23,6 +23,12 @@
                     <TextBox x:Name="TitleBox" Width="340" Tag="What needs doing?" />
                     <ComboBox x:Name="PriorityBox" Width="110" Margin="8,0,0,0" />
                     <DatePicker x:Name="DueBox" Width="130" Margin="8,0,0,0" />
+                    <ComboBox x:Name="RepeatCombo" Width="110" Margin="8,0,0,0">
+                        <ComboBoxItem Content="No repeat" Tag="None" IsSelected="True" />
+                        <ComboBoxItem Content="Daily" Tag="Day" />
+                        <ComboBoxItem Content="Weekly" Tag="Week" />
+                        <ComboBoxItem Content="Monthly" Tag="Month" />
+                    </ComboBox>
                     <Button x:Name="AddBtn" Content="Add" Style="{StaticResource AccentButton}"
                             Click="Add_Click" Margin="8,0,0,0" />
                     <Button x:Name="CancelBtn" Content="Cancel" Click="CancelEdit_Click"
@@ -49,6 +55,8 @@
                                             Visibility="{Binding HasDue, Converter={StaticResource BoolToVis}}">
                                         <TextBlock Text="{Binding DueText}" Foreground="White" FontSize="11" />
                                     </Border>
+                                    <TextBlock Text="{Binding RecurText}" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="3,0"
+                                               Visibility="{Binding HasRecur, Converter={StaticResource BoolToVis}}" />
                                     <Button Content="🏷" ToolTip="Projects" Click="Projects_Click" Margin="3,0,0,0" Padding="7,4" />
                                     <Button Content="✎" ToolTip="Edit" Click="Edit_Click" Margin="3,0,0,0" Padding="7,4" />
                                     <Button Content="✕" ToolTip="Delete" Click="Delete_Click" Margin="3,0,0,0" Padding="7,4" />

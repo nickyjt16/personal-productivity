@@ -9,6 +9,14 @@ public enum Priority
     High
 }
 
+public enum RecurUnit
+{
+    None,
+    Day,
+    Week,
+    Month
+}
+
 public enum PomodoroKind
 {
     Focus,
@@ -26,6 +34,9 @@ public class TodoItem
     public DateTimeOffset? DueDate { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
+    // Recurrence: when set, "completing" advances the due date instead of closing.
+    public RecurUnit RecurUnit { get; set; } = RecurUnit.None;
+    public int RecurInterval { get; set; }
     [JsonIgnore] public List<TodoProject> ProjectLinks { get; set; } = [];
 }
 

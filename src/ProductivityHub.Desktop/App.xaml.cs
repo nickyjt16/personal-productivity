@@ -9,6 +9,8 @@ public partial class App : Application
 {
     public static DesktopSettings Settings { get; private set; } = new();
 
+    private TrayManager? _tray;
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -34,9 +36,41 @@ public partial class App : Application
             MessageBox.Show("Failed to open the database: " + ex.Message, "Productivity Hub");
         }
 
-        new MainWindow().Show();
+        var main = new MainWindow();
+        main.Show();
+        _tray = new TrayManager(main);
 
         await NotifyExpiringSecretsAsync();
+        await NotifyDueTodosAsync();
+    }
+
+    protected override void OnExit(ExitEventArgs e)
+    {
+        _tray?.Dispose();
+        base.OnExit(e);
+    }
+
+    // Reminder for todos due today or overdue.
+    private static async Task NotifyDueTodosAsync()
+    {
+        try
+        {
+            var todayEnd = new DateTimeOffset(DateTime.Today).AddDays(1);
+            await using var db = Db.Context();
+            var due = await db.Todos.Where(t => !t.IsDone && t.DueDate != null && t.DueDate < todayEnd)
+                .OrderBy(t => t.DueDate).ToListAsync();
+            if (due.Count == 0) return;
+
+            var today = DateTime.Today;
+            var lines = due.Select(t =>
+            {
+                var d = t.DueDate!.Value.Date;
+                var when = d < today ? "overdue" : "due today";
+                return $"• {t.Title} — {when}";
+            });
+            MessageBox.Show(string.Join("\n", lines), "✅ Tasks due");
+        }
+        catch (Exception ex) { Log(ex); }
     }
 
     // A week's warning before any tracked secret expires.

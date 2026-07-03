@@ -45,6 +45,19 @@
                 </StackPanel>
             </Border>
 
+            <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+                <StackPanel>
+                    <TextBlock Text="Data location (sync)" Style="{StaticResource Muted}" Margin="0,0,0,6" />
+                    <TextBlock Text="By default your data lives on this PC only. Point it at a OneDrive-synced folder to use it on more than one machine (both apps share it)."
+                               Style="{StaticResource Muted}" />
+                    <TextBlock x:Name="DbPathText" Margin="0,6,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Content="Move to a folder…" Click="MoveDb_Click" />
+                        <Button Content="Use default location" Click="DefaultDb_Click" Margin="8,0,0,0" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <Border BorderBrush="{DynamicResource DangerBrush}" BorderThickness="1" CornerRadius="8" Padding="14">
                 <StackPanel>
                     <TextBlock Text="Danger zone" Foreground="{DynamicResource DangerBrush}" Margin="0,0,0,6" />

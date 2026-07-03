@@ -80,6 +80,8 @@ public static class SchemaUpdater
         // Columns added to existing tables after their initial creation.
         await AddColumnIfMissingAsync(db, "Secrets", "NotifyList", "TEXT", ct);
         await AddColumnIfMissingAsync(db, "Secrets", "Link", "TEXT", ct);
+        await AddColumnIfMissingAsync(db, "Todos", "RecurUnit", "INTEGER NOT NULL DEFAULT 0", ct);
+        await AddColumnIfMissingAsync(db, "Todos", "RecurInterval", "INTEGER NOT NULL DEFAULT 0", ct);
     }
 
     // Idempotent ALTER TABLE ADD COLUMN — SQLite can't do "IF NOT EXISTS" for

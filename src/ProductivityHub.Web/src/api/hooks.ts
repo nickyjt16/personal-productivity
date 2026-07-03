@@ -10,6 +10,7 @@ import type {
   Priority,
   Project,
   ProjectStatus,
+  RecurUnit,
   Secret,
   Todo,
 } from './types'
@@ -33,7 +34,7 @@ export function useTodos(done?: boolean, projectId?: string) {
 export function useCreateTodo() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: { title: string; notes?: string; priority?: Priority; dueDate?: string }) =>
+    mutationFn: (body: { title: string; notes?: string; priority?: Priority; dueDate?: string; recurUnit?: RecurUnit; recurInterval?: number }) =>
       api.post<Todo>('/api/todos', body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['todos'] }),
   })
@@ -44,7 +45,7 @@ export function useUpdateTodo() {
   return useMutation({
     mutationFn: ({ id, ...body }: {
       id: string; title: string; notes?: string | null; priority: Priority;
-      isDone: boolean; dueDate?: string | null
+      isDone: boolean; dueDate?: string | null; recurUnit?: RecurUnit; recurInterval?: number
     }) => api.put<Todo>(`/api/todos/${id}`, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['todos'] }),
   })
