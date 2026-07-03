@@ -34,7 +34,7 @@
 
             <Border Grid.Column="1" Style="{StaticResource Card}">
                 <DockPanel>
-                    <TextBox DockPanel.Dock="Top" x:Name="TitleBox" FontSize="16" Margin="0,0,0,8" />
+                    <TextBox DockPanel.Dock="Top" x:Name="TitleBox" FontSize="16" Margin="0,0,0,8" Tag="Title" />
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
                         <Button Content="Save" Style="{StaticResource AccentButton}" Click="Save_Click" />
                         <Button Content="🏷 Projects" Click="Projects_Click" Margin="8,0,0,0" />
@@ -42,7 +42,7 @@
                                 Click="Delete_Click" Margin="8,0,0,0" Visibility="Collapsed" />
                     </StackPanel>
                     <TextBox x:Name="BodyBox" AcceptsReturn="True" TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" />
+                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" Tag="Start writing…" />
                 </DockPanel>
             </Border>
         </Grid>

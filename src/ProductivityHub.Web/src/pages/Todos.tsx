@@ -142,7 +142,7 @@ function EditRow({ todo, onClose }: { todo: Todo; onClose: () => void }) {
       <div className="row g-2 align-items-end">
         <div className="col-12 col-md">
           <label className="form-label small">Task</label>
-          <input className="form-control" value={title} autoFocus
+          <input className="form-control" value={title} autoFocus placeholder="What needs doing?"
             onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div className="col-auto">

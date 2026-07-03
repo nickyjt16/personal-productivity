@@ -71,7 +71,7 @@ export default function Bookmarks() {
           </div>
           <div className="col">
             <label className="form-label">Title (optional)</label>
-            <input className="form-control" value={title}
+            <input className="form-control" value={title} placeholder="Auto-filled from the page if left blank"
               onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div className="col-auto">

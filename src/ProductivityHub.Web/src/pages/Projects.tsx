@@ -61,7 +61,7 @@ export default function Projects() {
           </div>
           <div className="col">
             <label className="form-label">Description (optional)</label>
-            <input className="form-control" value={description}
+            <input className="form-control" value={description} placeholder="What's this project about?"
               onChange={(e) => setDescription(e.target.value)} />
           </div>
           <div className="col-auto">

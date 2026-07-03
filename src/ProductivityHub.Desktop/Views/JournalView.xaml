@@ -20,12 +20,12 @@
                         <TextBlock Text="Date:" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,6,0" />
                         <DatePicker x:Name="DateBox" Width="130" SelectedDateChanged="Date_Changed" />
                         <TextBlock Text="Mood:" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="14,0,6,0" />
-                        <TextBox x:Name="MoodBox" Width="150" />
+                        <TextBox x:Name="MoodBox" Width="150" Tag="Mood (optional)" />
                     </StackPanel>
                     <Button DockPanel.Dock="Bottom" Content="Save entry" Style="{StaticResource AccentButton}"
                             Click="Save_Click" HorizontalAlignment="Left" Margin="0,8,0,0" />
                     <TextBox x:Name="BodyBox" AcceptsReturn="True" TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" />
+                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top" Tag="How was your day?" />
                 </DockPanel>
             </Border>
 

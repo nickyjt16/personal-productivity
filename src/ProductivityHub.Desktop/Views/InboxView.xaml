@@ -14,7 +14,7 @@
         <DockPanel Grid.Row="2" Margin="0,0,0,12">
             <Button DockPanel.Dock="Right" Content="Capture" Style="{StaticResource AccentButton}"
                     Click="Capture_Click" Margin="8,0,0,0" />
-            <TextBox x:Name="TextBox" KeyDown="TextBox_KeyDown" />
+            <TextBox x:Name="TextBox" KeyDown="TextBox_KeyDown" Tag="Capture a thought…" />
         </DockPanel>
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
             <ItemsControl x:Name="ItemsHost">

@@ -62,7 +62,8 @@ export default function Secrets() {
           </div>
           <div className="col-md-4">
             <label className="form-label">Client ID (optional)</label>
-            <input className="form-control" value={clientId} onChange={(e) => setClientId(e.target.value)} />
+            <input className="form-control" value={clientId} placeholder="e.g. 00000000-0000-0000-0000-000000000000"
+              onChange={(e) => setClientId(e.target.value)} />
           </div>
           <div className="col-md-4">
             <label className="form-label">Expires on</label>
@@ -70,7 +71,8 @@ export default function Secrets() {
           </div>
           <div className="col-md-8">
             <label className="form-label">Secret value (optional)</label>
-            <input className="form-control" value={value} type="text" onChange={(e) => setValue(e.target.value)} />
+            <input className="form-control" value={value} type="text" placeholder="Paste the secret / key"
+              onChange={(e) => setValue(e.target.value)} />
           </div>
           <div className="col-md-4 d-flex align-items-end gap-2">
             <button className="btn btn-primary" disabled={create.isPending || update.isPending}>
