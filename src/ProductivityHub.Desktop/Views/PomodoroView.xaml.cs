@@ -42,7 +42,9 @@ public partial class PomodoroView : UserControl
 
     private void Mode_Changed(object sender, RoutedEventArgs e)
     {
-        if (_running) return;
+        // The RadioButton's initial IsChecked fires this during InitializeComponent,
+        // before the other named controls exist — ignore until the view is ready.
+        if (!IsLoaded || _running) return;
         _remaining = TotalSeconds;
         UpdateDisplay();
     }

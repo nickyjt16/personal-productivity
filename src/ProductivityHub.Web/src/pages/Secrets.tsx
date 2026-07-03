@@ -1,6 +1,8 @@
 import { useState } from 'react'
-import { useCreateSecret, useDeleteSecret, useSecrets, useUpdateSecret } from '../api/hooks'
+import { useCreateSecret, useDeleteSecret, useSecrets, useSetItemProjects, useUpdateSecret } from '../api/hooks'
 import type { Secret } from '../api/types'
+import ProjectBadges from '../components/ProjectBadges'
+import ProjectPicker from '../components/ProjectPicker'
 
 function expiryBadge(daysLeft: number): { variant: string; label: string } {
   if (daysLeft < 0) return { variant: 'danger', label: `Expired ${-daysLeft}d ago` }
@@ -14,6 +16,7 @@ export default function Secrets() {
   const create = useCreateSecret()
   const update = useUpdateSecret()
   const remove = useDeleteSecret()
+  const setProjects = useSetItemProjects('secrets')
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -22,10 +25,13 @@ export default function Secrets() {
   const [expiresOn, setExpiresOn] = useState('')
   const [notes, setNotes] = useState('')
   const [notify, setNotify] = useState('')
+  const [link, setLink] = useState('')
+  const [projectIds, setProjectIds] = useState<string[]>([])
   const [reveal, setReveal] = useState<Record<string, boolean>>({})
 
   function reset() {
-    setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn(''); setNotes(''); setNotify('')
+    setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn('')
+    setNotes(''); setNotify(''); setLink(''); setProjectIds([])
   }
 
   function save(e: React.FormEvent) {
@@ -33,16 +39,24 @@ export default function Secrets() {
     if (!name.trim() || !expiresOn) return
     const body = {
       name: name.trim(), clientId: clientId.trim() || undefined, value: value || undefined,
-      expiresOn, notes: notes.trim() || undefined,
+      expiresOn, notes: notes.trim() || undefined, link: link.trim() || undefined,
       notify: notify.split('\n').map((x) => x.trim()).filter(Boolean),
     }
-    if (editingId) update.mutate({ id: editingId, ...body }, { onSuccess: reset })
-    else create.mutate(body, { onSuccess: reset })
+    if (editingId) {
+      update.mutate({ id: editingId, ...body }, {
+        onSuccess: () => { setProjects.mutate({ id: editingId, projectIds }); reset() },
+      })
+    } else {
+      create.mutate(body, {
+        onSuccess: (s) => { setProjects.mutate({ id: s.id, projectIds }); reset() },
+      })
+    }
   }
 
   function edit(s: Secret) {
     setEditingId(s.id); setName(s.name); setClientId(s.clientId ?? ''); setValue(s.value ?? '')
     setExpiresOn(s.expiresOn.slice(0, 10)); setNotes(s.notes ?? ''); setNotify(s.notify.join('\n'))
+    setLink(s.link ?? ''); setProjectIds(s.projects.map((p) => p.id))
   }
 
   return (
@@ -66,19 +80,18 @@ export default function Secrets() {
               onChange={(e) => setClientId(e.target.value)} />
           </div>
           <div className="col-md-4">
-            <label className="form-label">Expires on</label>
+            <label className="form-label">Expiry date</label>
             <input type="date" className="form-control" value={expiresOn} onChange={(e) => setExpiresOn(e.target.value)} />
           </div>
-          <div className="col-md-8">
+          <div className="col-md-6">
             <label className="form-label">Secret value (optional)</label>
             <input className="form-control" value={value} type="text" placeholder="Paste the secret / key"
               onChange={(e) => setValue(e.target.value)} />
           </div>
-          <div className="col-md-4 d-flex align-items-end gap-2">
-            <button className="btn btn-primary" disabled={create.isPending || update.isPending}>
-              {editingId ? 'Save' : 'Add'}
-            </button>
-            {editingId && <button type="button" className="btn btn-outline-secondary" onClick={reset}>Cancel</button>}
+          <div className="col-md-6">
+            <label className="form-label">Link to resource (optional)</label>
+            <input className="form-control" value={link} placeholder="https://portal.azure.com/…"
+              onChange={(e) => setLink(e.target.value)} />
           </div>
           <div className="col-12">
             <input className="form-control" value={notes} placeholder="Notes (optional)"
@@ -89,6 +102,13 @@ export default function Secrets() {
             <textarea className="form-control" rows={2} value={notify}
               placeholder="e.g. jane@example.com&#10;Platform Team&#10;#secrets-channel"
               onChange={(e) => setNotify(e.target.value)} />
+          </div>
+          <div className="col-12 d-flex align-items-center gap-2">
+            <button className="btn btn-primary" disabled={create.isPending || update.isPending}>
+              {editingId ? 'Save' : 'Add'}
+            </button>
+            {editingId && <button type="button" className="btn btn-outline-secondary" onClick={reset}>Cancel</button>}
+            <ProjectPicker value={projectIds} onChange={setProjectIds} />
           </div>
         </div>
       </form>
@@ -114,6 +134,11 @@ export default function Secrets() {
                         </button>
                       </div>
                     )}
+                    {s.link && (
+                      <div className="small">
+                        <a href={s.link} target="_blank" rel="noreferrer">{s.link}</a>
+                      </div>
+                    )}
                     {s.notes && <div className="small text-muted">{s.notes}</div>}
                     {s.notify.length > 0 && (
                       <div className="mt-1 d-flex flex-wrap gap-1 align-items-center">
@@ -123,6 +148,7 @@ export default function Secrets() {
                         ))}
                       </div>
                     )}
+                    {s.projects.length > 0 && <div className="mt-1"><ProjectBadges projects={s.projects} /></div>}
                   </div>
                   <span className="badge text-bg-light text-muted">{new Date(s.expiresOn).toLocaleDateString()}</span>
                   <span className={`badge text-bg-${badge.variant}`}>{badge.label}</span>

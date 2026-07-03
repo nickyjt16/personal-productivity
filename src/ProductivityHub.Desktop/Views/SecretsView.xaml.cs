@@ -24,11 +24,13 @@ public partial class SecretsView : UserControl
     private async Task LoadAsync()
     {
         await using var db = Db.Context();
-        var secrets = await db.Secrets.OrderBy(s => s.ExpiresOn).ToListAsync();
+        var secrets = await db.Secrets.Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+            .OrderBy(s => s.ExpiresOn).ToListAsync();
         ItemsHost.ItemsSource = secrets.Select(s => new SecretRow
         {
             Id = s.Id, Name = s.Name, ClientId = s.ClientId, Value = s.Value,
-            ExpiresOn = s.ExpiresOn, Notes = s.Notes, NotifyRaw = s.NotifyList,
+            ExpiresOn = s.ExpiresOn, Notes = s.Notes, NotifyRaw = s.NotifyList, Link = s.Link,
+            ProjectTags = s.ProjectLinks.Count == 0 ? "" : "🏷 " + string.Join(", ", s.ProjectLinks.Select(l => l.Project!.Name)),
         }).ToList();
     }
 
@@ -46,6 +48,7 @@ public partial class SecretsView : UserControl
         var notes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim();
         var notifyParts = NotifyBox.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var notify = notifyParts.Length == 0 ? null : string.Join("\n", notifyParts);
+        var link = string.IsNullOrWhiteSpace(LinkBox.Text) ? null : LinkBox.Text.Trim();
         var now = DateTimeOffset.UtcNow;
 
         await using (var db = Db.Context())
@@ -56,7 +59,7 @@ public partial class SecretsView : UserControl
                 if (s != null)
                 {
                     s.Name = name; s.ClientId = clientId; s.Value = value; s.ExpiresOn = expires;
-                    s.Notes = notes; s.NotifyList = notify; s.UpdatedAt = now;
+                    s.Notes = notes; s.NotifyList = notify; s.Link = link; s.UpdatedAt = now;
                     await db.SaveChangesAsync();
                 }
             }
@@ -65,7 +68,8 @@ public partial class SecretsView : UserControl
                 db.Secrets.Add(new Secret
                 {
                     Id = Guid.NewGuid(), Name = name, ClientId = clientId, Value = value,
-                    ExpiresOn = expires, Notes = notes, NotifyList = notify, CreatedAt = now, UpdatedAt = now,
+                    ExpiresOn = expires, Notes = notes, NotifyList = notify, Link = link,
+                    CreatedAt = now, UpdatedAt = now,
                 });
                 await db.SaveChangesAsync();
             }
@@ -83,9 +87,17 @@ public partial class SecretsView : UserControl
         ValueBox.Text = row.Value ?? "";
         NotesBox.Text = row.Notes ?? "";
         NotifyBox.Text = row.NotifyRaw ?? "";
+        LinkBox.Text = row.Link ?? "";
         ExpiresBox.SelectedDate = row.ExpiresOn.ToDateTime(TimeOnly.MinValue);
         AddBtn.Content = "Save";
         CancelBtn.Visibility = Visibility.Visible;
+    }
+
+    private async void Projects_Click(object sender, RoutedEventArgs e)
+    {
+        var row = (SecretRow)((FrameworkElement)sender).DataContext;
+        var dlg = new ProjectAssignDialog("secret", row.Id) { Owner = Window.GetWindow(this) };
+        if (dlg.ShowDialog() == true) await LoadAsync();
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e) => Reset();
@@ -93,7 +105,7 @@ public partial class SecretsView : UserControl
     private void Reset()
     {
         _editingId = null;
-        NameBox.Text = ""; ClientBox.Text = ""; ValueBox.Text = ""; NotesBox.Text = ""; NotifyBox.Text = "";
+        NameBox.Text = ""; ClientBox.Text = ""; ValueBox.Text = ""; NotesBox.Text = ""; NotifyBox.Text = ""; LinkBox.Text = "";
         ExpiresBox.SelectedDate = null;
         AddBtn.Content = "Add";
         CancelBtn.Visibility = Visibility.Collapsed;

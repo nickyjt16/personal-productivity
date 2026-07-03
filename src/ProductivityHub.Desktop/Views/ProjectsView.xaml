@@ -66,24 +66,31 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <StackPanel Grid.Column="0" Margin="0,0,6,0">
                             <TextBlock Text="✅ Todos" Style="{StaticResource Muted}" Margin="0,0,0,4" />
                             <StackPanel x:Name="LinkedTodos" />
-                            <ComboBox x:Name="AddTodoCombo" Margin="0,6,0,0" DisplayMemberPath="Label"
+                            <ComboBox x:Name="AddTodoCombo" Margin="0,6,0,0"
                                       SelectedValuePath="Id" SelectionChanged="AddTodo_Changed" />
                         </StackPanel>
-                        <StackPanel Grid.Column="1" Margin="4,0">
+                        <StackPanel Grid.Column="1" Margin="3,0">
                             <TextBlock Text="📝 Notes" Style="{StaticResource Muted}" Margin="0,0,0,4" />
                             <StackPanel x:Name="LinkedNotes" />
-                            <ComboBox x:Name="AddNoteCombo" Margin="0,6,0,0" DisplayMemberPath="Label"
+                            <ComboBox x:Name="AddNoteCombo" Margin="0,6,0,0"
                                       SelectedValuePath="Id" SelectionChanged="AddNote_Changed" />
                         </StackPanel>
-                        <StackPanel Grid.Column="2" Margin="8,0,0,0">
+                        <StackPanel Grid.Column="2" Margin="3,0">
                             <TextBlock Text="🔖 Bookmarks" Style="{StaticResource Muted}" Margin="0,0,0,4" />
                             <StackPanel x:Name="LinkedBookmarks" />
-                            <ComboBox x:Name="AddBookmarkCombo" Margin="0,6,0,0" DisplayMemberPath="Label"
+                            <ComboBox x:Name="AddBookmarkCombo" Margin="0,6,0,0"
                                       SelectedValuePath="Id" SelectionChanged="AddBookmark_Changed" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="3" Margin="6,0,0,0">
+                            <TextBlock Text="🔑 Secrets" Style="{StaticResource Muted}" Margin="0,0,0,4" />
+                            <StackPanel x:Name="LinkedSecrets" />
+                            <ComboBox x:Name="AddSecretCombo" Margin="0,6,0,0"
+                                      SelectedValuePath="Id" SelectionChanged="AddSecret_Changed" />
                         </StackPanel>
                     </Grid>
                 </StackPanel>

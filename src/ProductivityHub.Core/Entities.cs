@@ -92,8 +92,11 @@ public class Secret
     public string? Notes { get; set; }
     // People/teams to inform when this secret changes — stored newline-separated.
     public string? NotifyList { get; set; }
+    // Optional link to where the secret lives (portal page, docs, etc.).
+    public string? Link { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    [JsonIgnore] public List<SecretProject> ProjectLinks { get; set; } = [];
 }
 
 public enum ProjectStatus
@@ -140,6 +143,14 @@ public class BookmarkProject
 {
     public Guid BookmarkId { get; set; }
     [JsonIgnore] public Bookmark? Bookmark { get; set; }
+    public Guid ProjectId { get; set; }
+    [JsonIgnore] public Project? Project { get; set; }
+}
+
+public class SecretProject
+{
+    public Guid SecretId { get; set; }
+    [JsonIgnore] public Secret? Secret { get; set; }
     public Guid ProjectId { get; set; }
     [JsonIgnore] public Project? Project { get; set; }
 }

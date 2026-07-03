@@ -20,6 +20,7 @@ export interface Project {
   todosDone: number
   noteCount: number
   bookmarkCount: number
+  secretCount: number
 }
 
 export interface Todo {
@@ -79,6 +80,8 @@ export interface Secret {
   expiresOn: string
   notes: string | null
   notify: string[]
+  link: string | null
+  projects: ProjectRef[]
   daysLeft: number
 }
 

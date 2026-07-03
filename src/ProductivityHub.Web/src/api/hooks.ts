@@ -277,8 +277,11 @@ export function useDeleteProject() {
 }
 
 // ---------- Secrets ----------
-export function useSecrets() {
-  return useQuery({ queryKey: ['secrets'], queryFn: () => api.get<Secret[]>('/api/secrets') })
+export function useSecrets(projectId?: string) {
+  return useQuery({
+    queryKey: ['secrets', projectId],
+    queryFn: () => api.get<Secret[]>(`/api/secrets${qs({ projectId })}`),
+  })
 }
 
 export function useExpiringSecrets() {
@@ -288,7 +291,7 @@ export function useExpiringSecrets() {
 export function useCreateSecret() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: { name: string; clientId?: string; value?: string; expiresOn: string; notes?: string; notify?: string[] }) =>
+    mutationFn: (body: { name: string; clientId?: string; value?: string; expiresOn: string; notes?: string; notify?: string[]; link?: string }) =>
       api.post<Secret>('/api/secrets', body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
   })
@@ -297,7 +300,7 @@ export function useCreateSecret() {
 export function useUpdateSecret() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...body }: { id: string; name: string; clientId?: string; value?: string; expiresOn: string; notes?: string; notify?: string[] }) =>
+    mutationFn: ({ id, ...body }: { id: string; name: string; clientId?: string; value?: string; expiresOn: string; notes?: string; notify?: string[]; link?: string }) =>
       api.put<Secret>(`/api/secrets/${id}`, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
   })
@@ -353,7 +356,7 @@ export function useImportData() {
 }
 
 // Set the full set of projects an item belongs to. `kind` is the API route segment.
-export function useSetItemProjects(kind: 'todos' | 'notes' | 'bookmarks') {
+export function useSetItemProjects(kind: 'todos' | 'notes' | 'bookmarks' | 'secrets') {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ id, projectIds }: { id: string; projectIds: string[] }) =>

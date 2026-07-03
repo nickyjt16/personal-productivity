@@ -11,7 +11,7 @@
         <DockPanel Grid.Row="0" Margin="0,0,0,12">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                 <TextBlock Text="Project:" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,6,0" />
-                <ComboBox x:Name="FilterCombo" Width="160" DisplayMemberPath="Name" SelectedValuePath="Id"
+                <ComboBox x:Name="FilterCombo" Width="160" SelectedValuePath="Id"
                           SelectionChanged="Filter_Changed" />
             </StackPanel>
             <TextBlock Text="✅ Todos" Style="{StaticResource Heading}" Margin="0" />

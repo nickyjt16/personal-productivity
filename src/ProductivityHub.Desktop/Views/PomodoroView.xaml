@@ -10,7 +10,7 @@
                          Checked="Mode_Changed" Foreground="{DynamicResource TextBrush}" />
         </StackPanel>
         <TextBlock x:Name="TimeText" Text="25:00" FontSize="72" FontWeight="SemiBold" HorizontalAlignment="Center" />
-        <ComboBox x:Name="TaskCombo" Width="300" Margin="0,12" DisplayMemberPath="Label" SelectedValuePath="Id" />
+        <ComboBox x:Name="TaskCombo" Width="300" Margin="0,12" SelectedValuePath="Id" />
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <Button x:Name="StartBtn" Content="Start" Style="{StaticResource AccentButton}" Click="StartPause_Click" />
             <Button Content="Reset" Click="Reset_Click" Margin="8,0,0,0" />

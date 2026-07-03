@@ -51,6 +51,7 @@ public partial class ProjectAssignDialog : Window
         "todo" => (await db.TodoProjects.Where(x => x.TodoItemId == _id).Select(x => x.ProjectId).ToListAsync()).ToHashSet(),
         "note" => (await db.NoteProjects.Where(x => x.NoteId == _id).Select(x => x.ProjectId).ToListAsync()).ToHashSet(),
         "bookmark" => (await db.BookmarkProjects.Where(x => x.BookmarkId == _id).Select(x => x.ProjectId).ToListAsync()).ToHashSet(),
+        "secret" => (await db.SecretProjects.Where(x => x.SecretId == _id).Select(x => x.ProjectId).ToListAsync()).ToHashSet(),
         _ => new HashSet<Guid>(),
     };
 
@@ -75,6 +76,10 @@ public partial class ProjectAssignDialog : Window
             case "bookmark":
                 await Sync(db.BookmarkProjects, x => x.BookmarkId == _id, x => x.ProjectId,
                     pid => new BookmarkProject { BookmarkId = _id, ProjectId = pid }, chosen, db);
+                break;
+            case "secret":
+                await Sync(db.SecretProjects, x => x.SecretId == _id, x => x.ProjectId,
+                    pid => new SecretProject { SecretId = _id, ProjectId = pid }, chosen, db);
                 break;
         }
         DialogResult = true;

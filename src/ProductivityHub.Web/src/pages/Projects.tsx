@@ -5,11 +5,12 @@ import {
   useDeleteProject,
   useNotes,
   useProjects,
+  useSecrets,
   useSetItemProjects,
   useTodos,
   useUpdateProject,
 } from '../api/hooks'
-import type { Bookmark, Note, Project, ProjectStatus, Todo } from '../api/types'
+import type { Bookmark, Note, Project, ProjectStatus, Secret, Todo } from '../api/types'
 import { PROJECT_COLORS } from '../projectColors'
 
 const STATUS_FILTERS: { key: string; label: string }[] = [
@@ -132,7 +133,8 @@ function ProjectCard({ project, active, onSelect }: {
         <div className="text-muted small mb-2">
           {project.todosTotal} todo{project.todosTotal === 1 ? '' : 's'} ·
           {' '}{project.noteCount} note{project.noteCount === 1 ? '' : 's'} ·
-          {' '}{project.bookmarkCount} link{project.bookmarkCount === 1 ? '' : 's'}
+          {' '}{project.bookmarkCount} link{project.bookmarkCount === 1 ? '' : 's'} ·
+          {' '}{project.secretCount} secret{project.secretCount === 1 ? '' : 's'}
         </div>
         {project.todosTotal > 0 && (
           <div className="progress" style={{ height: 6 }} title={`${project.todosDone}/${project.todosTotal} done`}>
@@ -230,20 +232,23 @@ function LinkedItems({ project }: { project: Project }) {
   const { data: todos = [] } = useTodos(undefined, pid)
   const { data: notes = [] } = useNotes(pid)
   const { data: bookmarks = [] } = useBookmarks(undefined, pid)
+  const { data: projectSecrets = [] } = useSecrets(pid)
   const { data: allTodos = [] } = useTodos()
   const { data: allNotes = [] } = useNotes()
   const { data: allBookmarks = [] } = useBookmarks()
+  const { data: allSecrets = [] } = useSecrets()
 
   const setTodo = useSetItemProjects('todos')
   const setNote = useSetItemProjects('notes')
   const setBookmark = useSetItemProjects('bookmarks')
+  const setSecret = useSetItemProjects('secrets')
 
   const projectIdsOf = (item: { projects: { id: string }[] }) => item.projects.map((p) => p.id)
-  const linkedIds = new Set([...todos, ...notes, ...bookmarks].map((i) => i.id))
+  const linkedIds = new Set([...todos, ...notes, ...bookmarks, ...projectSecrets].map((i) => i.id))
 
   return (
     <div className="row g-4">
-      <div className="col-md-4">
+      <div className="col-md-3">
         <ItemColumn<Todo>
           title="✅ Todos"
           linked={todos}
@@ -253,7 +258,7 @@ function LinkedItems({ project }: { project: Project }) {
           onRemove={(t) => setTodo.mutate({ id: t.id, projectIds: projectIdsOf(t).filter((x) => x !== pid) })}
         />
       </div>
-      <div className="col-md-4">
+      <div className="col-md-3">
         <ItemColumn<Note>
           title="📝 Notes"
           linked={notes}
@@ -263,7 +268,7 @@ function LinkedItems({ project }: { project: Project }) {
           onRemove={(n) => setNote.mutate({ id: n.id, projectIds: projectIdsOf(n).filter((x) => x !== pid) })}
         />
       </div>
-      <div className="col-md-4">
+      <div className="col-md-3">
         <ItemColumn<Bookmark>
           title="🔖 Bookmarks"
           linked={bookmarks}
@@ -271,6 +276,16 @@ function LinkedItems({ project }: { project: Project }) {
           label={(b) => b.title || b.url}
           onAdd={(b) => setBookmark.mutate({ id: b.id, projectIds: [...projectIdsOf(b), pid] })}
           onRemove={(b) => setBookmark.mutate({ id: b.id, projectIds: projectIdsOf(b).filter((x) => x !== pid) })}
+        />
+      </div>
+      <div className="col-md-3">
+        <ItemColumn<Secret>
+          title="🔑 Secrets"
+          linked={projectSecrets}
+          unlinked={allSecrets.filter((s) => !linkedIds.has(s.id))}
+          label={(s) => s.name}
+          onAdd={(s) => setSecret.mutate({ id: s.id, projectIds: [...projectIdsOf(s), pid] })}
+          onRemove={(s) => setSecret.mutate({ id: s.id, projectIds: projectIdsOf(s).filter((x) => x !== pid) })}
         />
       </div>
     </div>

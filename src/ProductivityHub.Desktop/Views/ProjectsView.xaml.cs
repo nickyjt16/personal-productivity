@@ -71,11 +71,12 @@ public partial class ProjectsView : UserControl
             var todoDone = await db.TodoProjects.CountAsync(x => x.ProjectId == p.Id && x.TodoItem!.IsDone);
             var notes = await db.NoteProjects.CountAsync(x => x.ProjectId == p.Id);
             var bms = await db.BookmarkProjects.CountAsync(x => x.ProjectId == p.Id);
+            var secs = await db.SecretProjects.CountAsync(x => x.ProjectId == p.Id);
             rows.Add(new ProjectRow
             {
                 Id = p.Id, Name = p.Name, Description = p.Description, Status = p.Status,
                 ColorBrush = Palette.FromHex(p.Color),
-                CountsText = $"{todoTotal} todos · {notes} notes · {bms} links",
+                CountsText = $"{todoTotal} todos · {notes} notes · {bms} links · {secs} secrets",
                 ProgressPct = todoTotal > 0 ? (double)todoDone / todoTotal * 100 : 0,
                 HasProgress = todoTotal > 0,
             });
@@ -167,10 +168,12 @@ public partial class ProjectsView : UserControl
         var linkedTodoIds = await db.TodoProjects.Where(x => x.ProjectId == pid).Select(x => x.TodoItemId).ToListAsync();
         var linkedNoteIds = await db.NoteProjects.Where(x => x.ProjectId == pid).Select(x => x.NoteId).ToListAsync();
         var linkedBmIds = await db.BookmarkProjects.Where(x => x.ProjectId == pid).Select(x => x.BookmarkId).ToListAsync();
+        var linkedSecretIds = await db.SecretProjects.Where(x => x.ProjectId == pid).Select(x => x.SecretId).ToListAsync();
 
         var todos = await db.Todos.ToListAsync();
         var notes = await db.Notes.ToListAsync();
         var bookmarks = await db.Bookmarks.ToListAsync();
+        var secrets = await db.Secrets.ToListAsync();
 
         FillLinked(LinkedTodos, todos.Where(t => linkedTodoIds.Contains(t.Id)).Select(t => new LinkRow { Id = t.Id, Label = t.Title }),
             tid => RemoveLink("todo", tid));
@@ -178,10 +181,13 @@ public partial class ProjectsView : UserControl
             nid => RemoveLink("note", nid));
         FillLinked(LinkedBookmarks, bookmarks.Where(b => linkedBmIds.Contains(b.Id)).Select(b => new LinkRow { Id = b.Id, Label = b.Title ?? b.Url }),
             bid => RemoveLink("bookmark", bid));
+        FillLinked(LinkedSecrets, secrets.Where(s => linkedSecretIds.Contains(s.Id)).Select(s => new LinkRow { Id = s.Id, Label = s.Name }),
+            sid => RemoveLink("secret", sid));
 
         FillAddCombo(AddTodoCombo, todos.Where(t => !linkedTodoIds.Contains(t.Id)).Select(t => new LinkRow { Id = t.Id, Label = t.Title }));
         FillAddCombo(AddNoteCombo, notes.Where(n => !linkedNoteIds.Contains(n.Id)).Select(n => new LinkRow { Id = n.Id, Label = string.IsNullOrWhiteSpace(n.Title) ? "Untitled" : n.Title! }));
         FillAddCombo(AddBookmarkCombo, bookmarks.Where(b => !linkedBmIds.Contains(b.Id)).Select(b => new LinkRow { Id = b.Id, Label = b.Title ?? b.Url }));
+        FillAddCombo(AddSecretCombo, secrets.Where(s => !linkedSecretIds.Contains(s.Id)).Select(s => new LinkRow { Id = s.Id, Label = s.Name }));
 
         _loadingDetail = false;
     }
@@ -215,6 +221,7 @@ public partial class ProjectsView : UserControl
     private async void AddTodo_Changed(object sender, SelectionChangedEventArgs e) => await AddLink("todo", AddTodoCombo);
     private async void AddNote_Changed(object sender, SelectionChangedEventArgs e) => await AddLink("note", AddNoteCombo);
     private async void AddBookmark_Changed(object sender, SelectionChangedEventArgs e) => await AddLink("bookmark", AddBookmarkCombo);
+    private async void AddSecret_Changed(object sender, SelectionChangedEventArgs e) => await AddLink("secret", AddSecretCombo);
 
     private async Task AddLink(string type, ComboBox combo)
     {
@@ -228,6 +235,7 @@ public partial class ProjectsView : UserControl
                 case "todo": db.TodoProjects.Add(new TodoProject { TodoItemId = itemId, ProjectId = pid }); break;
                 case "note": db.NoteProjects.Add(new NoteProject { NoteId = itemId, ProjectId = pid }); break;
                 case "bookmark": db.BookmarkProjects.Add(new BookmarkProject { BookmarkId = itemId, ProjectId = pid }); break;
+                case "secret": db.SecretProjects.Add(new SecretProject { SecretId = itemId, ProjectId = pid }); break;
             }
             await db.SaveChangesAsync();
         }
@@ -245,6 +253,7 @@ public partial class ProjectsView : UserControl
                 case "todo": await db.TodoProjects.Where(x => x.ProjectId == pid && x.TodoItemId == itemId).ExecuteDeleteAsync(); break;
                 case "note": await db.NoteProjects.Where(x => x.ProjectId == pid && x.NoteId == itemId).ExecuteDeleteAsync(); break;
                 case "bookmark": await db.BookmarkProjects.Where(x => x.ProjectId == pid && x.BookmarkId == itemId).ExecuteDeleteAsync(); break;
+                case "secret": await db.SecretProjects.Where(x => x.ProjectId == pid && x.SecretId == itemId).ExecuteDeleteAsync(); break;
             }
         }
         await ShowDetailAsync();

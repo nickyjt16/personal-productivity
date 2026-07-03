@@ -26,8 +26,8 @@ public partial class TodosView : UserControl
             .OrderBy(p => p.Name)
             .Select(p => new { p.Id, p.Name }).ToListAsync();
 
-        var items = new List<object> { new { Id = (Guid?)null, Name = "All projects" } };
-        items.AddRange(projects.Select(p => (object)new { Id = (Guid?)p.Id, Name = p.Name }));
+        var items = new List<ComboItem> { new() { Id = null, Label = "All projects" } };
+        items.AddRange(projects.Select(p => new ComboItem { Id = p.Id, Label = p.Name }));
         FilterCombo.ItemsSource = items;
         FilterCombo.SelectedIndex = 0;
     }

@@ -108,6 +108,17 @@ public class LinkRow
 {
     public required Guid Id { get; init; }
     public required string Label { get; init; }
+    // Shown by ComboBox (we don't use DisplayMemberPath because our custom
+    // ComboBox template renders SelectionBoxItem directly).
+    public override string ToString() => Label;
+}
+
+// ComboBox item with a nullable id (e.g. an "All" option).
+public class ComboItem
+{
+    public Guid? Id { get; init; }
+    public required string Label { get; init; }
+    public override string ToString() => Label;
 }
 
 public class SecretRow
@@ -122,6 +133,10 @@ public class SecretRow
     public bool HasNotify => !string.IsNullOrWhiteSpace(NotifyRaw);
     public string NotifyText => "Notify: " + string.Join(", ",
         (NotifyRaw ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+    public string? Link { get; init; }
+    public bool HasLink => !string.IsNullOrWhiteSpace(Link);
+    public string ProjectTags { get; init; } = "";
+    public bool HasProjects => ProjectTags.Length > 0;
 
     public int DaysLeft => ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Now.Date).DayNumber;
     public string ExpiresText => ExpiresOn.ToString("d", CultureInfo.CurrentCulture);

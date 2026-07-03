@@ -60,15 +60,26 @@ public static class SchemaUpdater
                 "ExpiresOn" TEXT NOT NULL,
                 "Notes" TEXT NULL,
                 "NotifyList" TEXT NULL,
+                "Link" TEXT NULL,
                 "CreatedAt" INTEGER NOT NULL,
                 "UpdatedAt" INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS "SecretProjects" (
+                "SecretId" TEXT NOT NULL,
+                "ProjectId" TEXT NOT NULL,
+                CONSTRAINT "PK_SecretProjects" PRIMARY KEY ("SecretId", "ProjectId"),
+                CONSTRAINT "FK_SecretProjects_Secrets_SecretId" FOREIGN KEY ("SecretId") REFERENCES "Secrets" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_SecretProjects_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "IX_SecretProjects_ProjectId" ON "SecretProjects" ("ProjectId");
             """;
 
         await db.Database.ExecuteSqlRawAsync(sql, ct);
 
         // Columns added to existing tables after their initial creation.
         await AddColumnIfMissingAsync(db, "Secrets", "NotifyList", "TEXT", ct);
+        await AddColumnIfMissingAsync(db, "Secrets", "Link", "TEXT", ct);
     }
 
     // Idempotent ALTER TABLE ADD COLUMN — SQLite can't do "IF NOT EXISTS" for

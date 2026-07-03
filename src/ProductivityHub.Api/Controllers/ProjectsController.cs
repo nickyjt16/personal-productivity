@@ -11,7 +11,7 @@ public class ProjectsController(AppDbContext db) : ControllerBase
 {
     public record ProjectDto(Guid Id, string Name, string? Description, string Color,
         ProjectStatus Status, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt,
-        int TodosTotal, int TodosDone, int NoteCount, int BookmarkCount);
+        int TodosTotal, int TodosDone, int NoteCount, int BookmarkCount, int SecretCount);
 
     public record SaveProjectRequest(string Name, string? Description, string? Color, ProjectStatus? Status);
 
@@ -37,7 +37,8 @@ public class ProjectsController(AppDbContext db) : ControllerBase
                 db.TodoProjects.Count(tp => tp.ProjectId == p.Id),
                 db.TodoProjects.Count(tp => tp.ProjectId == p.Id && tp.TodoItem!.IsDone),
                 db.NoteProjects.Count(np => np.ProjectId == p.Id),
-                db.BookmarkProjects.Count(bp => bp.ProjectId == p.Id)))
+                db.BookmarkProjects.Count(bp => bp.ProjectId == p.Id),
+                db.SecretProjects.Count(sp => sp.ProjectId == p.Id)))
             .ToListAsync(ct);
 
         return Ok(projects);
@@ -99,6 +100,7 @@ public class ProjectsController(AppDbContext db) : ControllerBase
         await db.TodoProjects.Where(x => x.ProjectId == id).ExecuteDeleteAsync(ct);
         await db.NoteProjects.Where(x => x.ProjectId == id).ExecuteDeleteAsync(ct);
         await db.BookmarkProjects.Where(x => x.ProjectId == id).ExecuteDeleteAsync(ct);
+        await db.SecretProjects.Where(x => x.ProjectId == id).ExecuteDeleteAsync(ct);
 
         db.Projects.Remove(project);
         await db.SaveChangesAsync(ct);
@@ -110,5 +112,6 @@ public class ProjectsController(AppDbContext db) : ControllerBase
             await db.TodoProjects.CountAsync(tp => tp.ProjectId == p.Id, ct),
             await db.TodoProjects.CountAsync(tp => tp.ProjectId == p.Id && tp.TodoItem!.IsDone, ct),
             await db.NoteProjects.CountAsync(np => np.ProjectId == p.Id, ct),
-            await db.BookmarkProjects.CountAsync(bp => bp.ProjectId == p.Id, ct));
+            await db.BookmarkProjects.CountAsync(bp => bp.ProjectId == p.Id, ct),
+            await db.SecretProjects.CountAsync(sp => sp.ProjectId == p.Id, ct));
 }

@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<TodoProject> TodoProjects => Set<TodoProject>();
     public DbSet<NoteProject> NoteProjects => Set<NoteProject>();
     public DbSet<BookmarkProject> BookmarkProjects => Set<BookmarkProject>();
+    public DbSet<SecretProject> SecretProjects => Set<SecretProject>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -74,6 +75,14 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(x => new { x.BookmarkId, x.ProjectId });
             e.HasOne(x => x.Bookmark).WithMany(b => b.ProjectLinks)
                 .HasForeignKey(x => x.BookmarkId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Project).WithMany()
+                .HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<SecretProject>(e =>
+        {
+            e.HasKey(x => new { x.SecretId, x.ProjectId });
+            e.HasOne(x => x.Secret).WithMany(s => s.ProjectLinks)
+                .HasForeignKey(x => x.SecretId).OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.Project).WithMany()
                 .HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         });
