@@ -1,4 +1,6 @@
-namespace ProductivityHub.Api.Data;
+using Microsoft.Extensions.Logging;
+
+namespace ProductivityHub.Core.Data;
 
 // Copies the SQLite file to a timestamped backup on startup (before any schema
 // changes), keeping the most recent few. Cheap insurance against corruption or

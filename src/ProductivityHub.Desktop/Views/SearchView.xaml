@@ -1,0 +1,11 @@
+<UserControl x:Class="ProductivityHub.Desktop.Views.SearchView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="20">
+            <TextBlock x:Name="Heading" Style="{StaticResource Heading}" />
+            <TextBlock x:Name="Empty" Text="No matches found." Style="{StaticResource Muted}" Visibility="Collapsed" />
+            <StackPanel x:Name="Results" />
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

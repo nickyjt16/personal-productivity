@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [main]
 
+# Note: ProductivityHub.Desktop is a Windows-only WPF app and is intentionally
+# not built here (this runner is Linux). CI covers Core + API + tests + the web
+# frontend, which are cross-platform.
 jobs:
   build-test:
     runs-on: ubuntu-latest
@@ -28,11 +31,5 @@ jobs:
           npm ci
           npm run build
 
-      - name: Restore .NET
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore -c Release
-
-      - name: Test
-        run: dotnet test --no-build -c Release
+      - name: Build + test (Core, API, tests)
+        run: dotnet test tests/ProductivityHub.Api.Tests/ProductivityHub.Api.Tests.csproj -c Release

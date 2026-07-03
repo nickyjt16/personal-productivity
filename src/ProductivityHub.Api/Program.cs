@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using ProductivityHub.Api.Data;
+using ProductivityHub.Core;
+using ProductivityHub.Core.Data;
 using ProductivityHub.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,8 +15,9 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
+// Shared with the desktop app: %APPDATA%\ProductivityHub\productivityhub.db
 var connectionString = builder.Configuration.GetConnectionString("AppDb")
-    ?? "Data Source=productivityhub.db";
+    ?? AppPaths.ConnectionString;
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 
 // Teams→OneDrive link import (drops files in a synced folder; we drain them into bookmarks).

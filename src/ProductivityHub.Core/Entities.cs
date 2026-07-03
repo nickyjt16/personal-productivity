@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ProductivityHub.Api.Data.Entities;
+namespace ProductivityHub.Core.Data.Entities;
 
 public enum Priority
 {

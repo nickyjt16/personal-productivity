@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ProductivityHub.Api.Data;
-using ProductivityHub.Api.Data.Entities;
+using ProductivityHub.Core.Data;
+using ProductivityHub.Core.Data.Entities;
 
 namespace ProductivityHub.Api.Controllers;
 

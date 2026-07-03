@@ -1,0 +1,51 @@
+<UserControl x:Class="ProductivityHub.Desktop.Views.BookmarksView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,4">
+            <Button DockPanel.Dock="Right" Content="↻ Check for new links" Click="Import_Click" />
+            <TextBlock Text="🔖 Bookmarks" Style="{StaticResource Heading}" Margin="0" />
+        </DockPanel>
+        <TextBlock Grid.Row="1" x:Name="Status" Style="{StaticResource Muted}" Margin="0,0,0,12" />
+
+        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal">
+                <TextBox x:Name="UrlBox" Width="320" />
+                <TextBox x:Name="TitleBox" Width="220" Margin="8,0,0,0" />
+                <Button Content="Save" Style="{StaticResource AccentButton}" Click="Add_Click" Margin="8,0,0,0" />
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="ItemsHost">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8" Padding="12,8">
+                            <DockPanel>
+                                <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsRead, Mode=OneWay}"
+                                          ToolTip="Mark read" Click="ToggleRead_Click" Margin="0,0,10,0" VerticalAlignment="Center" />
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Content="Open" Click="Open_Click" Margin="3,0" Padding="7,4" />
+                                    <Button Content="🏷" ToolTip="Projects" Click="Projects_Click" Margin="3,0" Padding="7,4" />
+                                    <Button Content="✕" Click="Delete_Click" Margin="3,0" Padding="7,4" />
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Display}" />
+                                    <TextBlock Text="{Binding ProjectTags}" Style="{StaticResource Muted}"
+                                               Visibility="{Binding HasProjects, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

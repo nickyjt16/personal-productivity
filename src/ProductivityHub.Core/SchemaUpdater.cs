@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace ProductivityHub.Api.Data;
+namespace ProductivityHub.Core.Data;
 
 // EnsureCreated() only builds the schema when the database file doesn't yet
 // exist, so it won't add new tables to a database created by an earlier version.

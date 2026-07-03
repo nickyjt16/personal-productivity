@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using ProductivityHub.Api.Data;
-using ProductivityHub.Api.Data.Entities;
+using ProductivityHub.Core.Data;
+using ProductivityHub.Core.Data.Entities;
 
 namespace ProductivityHub.Api.Services;
 

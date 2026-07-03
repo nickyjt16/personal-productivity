@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using ProductivityHub.Api.Data.Entities;
+using ProductivityHub.Core.Data.Entities;
 
-namespace ProductivityHub.Api.Data;
+namespace ProductivityHub.Core.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

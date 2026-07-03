@@ -13,11 +13,42 @@ A personal, local-only productivity app — a small dashboard tying together six
 
 Single-user and local — no authentication, all data in a local SQLite file on your machine.
 
+## Two ways to run it
+
+There are **two front-ends over one shared database** (`%APPDATA%\ProductivityHub\productivityhub.db`),
+so you can use either and the data stays in sync:
+
+1. **Desktop app (WPF)** — a native Windows app that opens instantly with **no server**. Recommended
+   for everyday use. See [Desktop app](#desktop-app-wpf).
+2. **Web app** — the ASP.NET Core + React version served on `http://localhost:5180`.
+
 ## Stack
 
-- **API:** ASP.NET Core 9 (attribute controllers), EF Core 9 + SQLite
-- **Web:** React 19 + Vite + TypeScript + React Router 7 + TanStack Query + Bootstrap 5
+- **Core:** `ProductivityHub.Core` — shared EF Core 9 entities, `AppDbContext`, schema patch, backup
+  (used by both front-ends).
+- **Desktop:** .NET 9 **WPF** (`ProductivityHub.Desktop`) — talks to SQLite in-process, no server.
+- **API:** ASP.NET Core 9 (attribute controllers) — `ProductivityHub.Api`.
+- **Web:** React 19 + Vite + TypeScript + React Router 7 + TanStack Query + Bootstrap 5.
 - One Kestrel process serves both the API and the built SPA on `http://localhost:5180`.
+
+## Desktop app (WPF)
+
+Native window, opens with a double-click, **no server or localhost**. Same features as the web app —
+todos, inbox, bookmarks, notes, Pomodoro (with an always-on-top mini timer), journal, projects,
+search, dark mode, backup/restore, and Teams link-import — over the shared database.
+
+```powershell
+# Publish a single-file executable
+dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+
+# (optional) put a shortcut on your Desktop
+powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1
+```
+
+The exe is at `src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish\ProductivityHub.Desktop.exe`
+— double-click it (or the Desktop shortcut). Requires the .NET 9 runtime (add `--self-contained true`
+to the publish command to bundle it and drop that requirement). Set the Teams link-import folder under
+**Settings** in the app.
 
 ## Layout
 

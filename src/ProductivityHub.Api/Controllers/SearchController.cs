@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ProductivityHub.Api.Data;
+using ProductivityHub.Core.Data;
 
 namespace ProductivityHub.Api.Controllers;
 
