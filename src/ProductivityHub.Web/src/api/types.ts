@@ -86,6 +86,15 @@ export interface Secret {
   link: string | null
   projects: ProjectRef[]
   daysLeft: number
+  // A value is stored (hasValue) but may be hidden until the vault is unlocked (locked).
+  hasValue: boolean
+  locked: boolean
+}
+
+export interface VaultStatus {
+  configured: boolean
+  unlocked: boolean
+  hint: string | null
 }
 
 export interface PomodoroSession {

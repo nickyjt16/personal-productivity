@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.EntityFrameworkCore;
+using ProductivityHub.Core;
 using ProductivityHub.Core.Data.Entities;
 
 namespace ProductivityHub.Desktop.Views;
@@ -8,6 +9,9 @@ namespace ProductivityHub.Desktop.Views;
 public partial class SecretsView : UserControl
 {
     private Guid? _editingId;
+    private bool _configured;
+    // Projects chosen in the add form, applied when a new secret is created.
+    private HashSet<Guid> _pendingProjectIds = [];
 
     public SecretsView()
     {
@@ -23,15 +27,78 @@ public partial class SecretsView : UserControl
 
     private async Task LoadAsync()
     {
-        await using var db = Db.Context();
-        var secrets = await db.Secrets.Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
-            .OrderBy(s => s.ExpiresOn).ToListAsync();
-        ItemsHost.ItemsSource = secrets.Select(s => new SecretRow
+        List<Secret> secrets;
+        await using (var db = Db.Context())
         {
-            Id = s.Id, Name = s.Name, ClientId = s.ClientId, Value = s.Value,
-            ExpiresOn = s.ExpiresOn, Notes = s.Notes, NotifyRaw = s.NotifyList, Link = s.Link,
-            ProjectTags = s.ProjectLinks.Count == 0 ? "" : "🏷 " + string.Join(", ", s.ProjectLinks.Select(l => l.Project!.Name)),
+            secrets = await db.Secrets.Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+                .OrderBy(s => s.ExpiresOn).ToListAsync();
+            _configured = await VaultService.IsConfiguredAsync(db);
+        }
+        ItemsHost.ItemsSource = secrets.Select(s =>
+        {
+            var (shown, locked) = RevealValue(s.Value);
+            return new SecretRow
+            {
+                Id = s.Id, Name = s.Name, ClientId = s.ClientId, Value = shown, Locked = locked,
+                ExpiresOn = s.ExpiresOn, Notes = s.Notes, NotifyRaw = s.NotifyList, Link = s.Link,
+                ProjectTags = s.ProjectLinks.Count == 0 ? "" : "🏷 " + string.Join(", ", s.ProjectLinks.Select(l => l.Project!.Name)),
+            };
         }).ToList();
+        UpdateLockUi();
+    }
+
+    // Turns the stored value into (plaintext-to-show, isLocked). Encrypted values
+    // are only revealed when the vault is unlocked.
+    private static (string? shown, bool locked) RevealValue(string? stored)
+    {
+        if (string.IsNullOrEmpty(stored)) return (null, false);
+        if (!SecretCrypto.IsEncrypted(stored)) return (stored, false);   // legacy plaintext
+        if (!App.VaultUnlocked) return (null, true);
+        try { return (SecretCrypto.Decrypt(stored, App.VaultKey!), false); }
+        catch { return (null, true); }
+    }
+
+    private void UpdateLockUi()
+    {
+        if (App.VaultUnlocked)
+        {
+            LockStatusText.Text = "🔓 Secrets unlocked — values are visible.";
+            LockToggleBtn.Content = "Lock";
+        }
+        else if (_configured)
+        {
+            LockStatusText.Text = "🔒 Secret values are locked.";
+            LockToggleBtn.Content = "Unlock";
+        }
+        else
+        {
+            LockStatusText.Text = "Secret values are not encrypted yet. Set a master password to protect them.";
+            LockToggleBtn.Content = "Set master password";
+        }
+    }
+
+    private async void LockToggle_Click(object sender, RoutedEventArgs e)
+    {
+        if (App.VaultUnlocked)
+            App.LockVault();
+        else
+            await App.SetupOrUnlockVaultAsync(Window.GetWindow(this));
+        await LoadAsync();
+    }
+
+    // Prepares a submitted value for storage: encrypts when unlocked, blocks when a
+    // vault exists but is locked, or stores plaintext when no vault is set up yet.
+    private async Task<(bool ok, string? stored)> PrepareValueAsync(string? submitted)
+    {
+        if (string.IsNullOrEmpty(submitted)) return (true, null);
+        if (App.VaultUnlocked) return (true, SecretCrypto.Encrypt(submitted, App.VaultKey!));
+        await using var db = Db.Context();
+        if (await VaultService.IsConfiguredAsync(db))
+        {
+            MessageBox.Show("Unlock the vault (button at the top) before saving a secret value.", "Secrets");
+            return (false, null);
+        }
+        return (true, submitted);
     }
 
     private async void Add_Click(object sender, RoutedEventArgs e)
@@ -44,12 +111,15 @@ public partial class SecretsView : UserControl
         }
         var expires = DateOnly.FromDateTime(dt);
         var clientId = string.IsNullOrWhiteSpace(ClientBox.Text) ? null : ClientBox.Text.Trim();
-        var value = string.IsNullOrWhiteSpace(ValueBox.Text) ? null : ValueBox.Text;
+        var submittedValue = string.IsNullOrWhiteSpace(ValueBox.Text) ? null : ValueBox.Text;
         var notes = string.IsNullOrWhiteSpace(NotesBox.Text) ? null : NotesBox.Text.Trim();
         var notifyParts = NotifyBox.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var notify = notifyParts.Length == 0 ? null : string.Join("\n", notifyParts);
         var link = string.IsNullOrWhiteSpace(LinkBox.Text) ? null : LinkBox.Text.Trim();
         var now = DateTimeOffset.UtcNow;
+
+        var (ok, storedValue) = await PrepareValueAsync(submittedValue);
+        if (!ok) return;
 
         await using (var db = Db.Context())
         {
@@ -58,19 +128,25 @@ public partial class SecretsView : UserControl
                 var s = await db.Secrets.FindAsync(id);
                 if (s != null)
                 {
-                    s.Name = name; s.ClientId = clientId; s.Value = value; s.ExpiresOn = expires;
+                    s.Name = name; s.ClientId = clientId; s.ExpiresOn = expires;
                     s.Notes = notes; s.NotifyList = notify; s.Link = link; s.UpdatedAt = now;
+                    // Only replace the value when a new one was entered, so editing
+                    // other fields while locked can't wipe the stored secret.
+                    if (submittedValue is not null) s.Value = storedValue;
                     await db.SaveChangesAsync();
                 }
             }
             else
             {
+                var newId = Guid.NewGuid();
                 db.Secrets.Add(new Secret
                 {
-                    Id = Guid.NewGuid(), Name = name, ClientId = clientId, Value = value,
+                    Id = newId, Name = name, ClientId = clientId, Value = storedValue,
                     ExpiresOn = expires, Notes = notes, NotifyList = notify, Link = link,
                     CreatedAt = now, UpdatedAt = now,
                 });
+                foreach (var pid in _pendingProjectIds)
+                    db.SecretProjects.Add(new SecretProject { SecretId = newId, ProjectId = pid });
                 await db.SaveChangesAsync();
             }
         }
@@ -82,6 +158,8 @@ public partial class SecretsView : UserControl
     {
         var row = (SecretRow)((FrameworkElement)sender).DataContext;
         _editingId = row.Id;
+        _pendingProjectIds = [];
+        UpdatePickBtn();
         NameBox.Text = row.Name;
         ClientBox.Text = row.ClientId ?? "";
         ValueBox.Text = row.Value ?? "";
@@ -100,11 +178,34 @@ public partial class SecretsView : UserControl
         if (dlg.ShowDialog() == true) await LoadAsync();
     }
 
+    // The "🏷 Projects" button on the add/edit form. When editing an existing
+    // secret it assigns directly; when adding a new one it just collects the choice.
+    private async void PickProjects_Click(object sender, RoutedEventArgs e)
+    {
+        if (_editingId is Guid id)
+        {
+            var dlg = new ProjectAssignDialog("secret", id) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() == true) await LoadAsync();
+            return;
+        }
+        var pick = new ProjectAssignDialog(_pendingProjectIds) { Owner = Window.GetWindow(this) };
+        if (pick.ShowDialog() == true)
+        {
+            _pendingProjectIds = pick.SelectedIds.ToHashSet();
+            UpdatePickBtn();
+        }
+    }
+
+    private void UpdatePickBtn() =>
+        PickProjectsBtn.Content = _pendingProjectIds.Count == 0 ? "🏷 Projects" : $"🏷 Projects ({_pendingProjectIds.Count})";
+
     private void Cancel_Click(object sender, RoutedEventArgs e) => Reset();
 
     private void Reset()
     {
         _editingId = null;
+        _pendingProjectIds = [];
+        UpdatePickBtn();
         NameBox.Text = ""; ClientBox.Text = ""; ValueBox.Text = ""; NotesBox.Text = ""; NotifyBox.Text = ""; LinkBox.Text = "";
         ExpiresBox.SelectedDate = null;
         AddBtn.Content = "Add";

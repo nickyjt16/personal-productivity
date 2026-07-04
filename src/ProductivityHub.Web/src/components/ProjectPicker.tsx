@@ -32,8 +32,7 @@ export default function ProjectPicker({
     onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id])
   }
 
-  function addNew(e: React.FormEvent) {
-    e.preventDefault()
+  function addNew() {
     const name = newName.trim()
     if (!name) return
     create.mutate({ name }, {
@@ -67,11 +66,15 @@ export default function ProjectPicker({
                 </label>
               ))}
             </div>
-            <form className="input-group input-group-sm mt-2" onSubmit={addNew}>
+            {/* Not a <form>: this picker is rendered inside other forms, and nested
+                forms are invalid HTML. Enter and the button both call addNew. */}
+            <div className="input-group input-group-sm mt-2">
               <input className="form-control" placeholder="New project…" value={newName}
-                onChange={(e) => setNewName(e.target.value)} />
-              <button className="btn btn-outline-primary" disabled={create.isPending}>Add</button>
-            </form>
+                onChange={(e) => setNewName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addNew() } }} />
+              <button type="button" className="btn btn-outline-primary" disabled={create.isPending}
+                onClick={addNew}>Add</button>
+            </div>
           </div>
         </>
       )}

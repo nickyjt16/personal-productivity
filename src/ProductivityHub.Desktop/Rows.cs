@@ -143,6 +143,9 @@ public class SecretRow
     public bool HasLink => !string.IsNullOrWhiteSpace(Link);
     public string ProjectTags { get; init; } = "";
     public bool HasProjects => ProjectTags.Length > 0;
+    // A value is stored but the vault is locked, so it can't be shown.
+    public bool Locked { get; init; }
+    public string LockedNote => "🔒 Value hidden — unlock to view";
 
     public int DaysLeft => ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Now.Date).DayNumber;
     public string ExpiresText => ExpiresOn.ToString("d", CultureInfo.CurrentCulture);

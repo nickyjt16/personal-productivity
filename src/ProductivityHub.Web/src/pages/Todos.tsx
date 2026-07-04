@@ -35,10 +35,12 @@ export default function Todos() {
   const toggle = useToggleTodo()
   const remove = useDeleteTodo()
 
+  const setProjects = useSetItemProjects('todos')
   const [title, setTitle] = useState('')
   const [priority, setPriority] = useState<Priority>('Medium')
   const [dueDate, setDueDate] = useState('')
   const [repeat, setRepeat] = useState<RecurUnit>('None')
+  const [projectIds, setProjectIds] = useState<string[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
 
   function add(e: React.FormEvent) {
@@ -49,7 +51,12 @@ export default function Todos() {
         title: title.trim(), priority, dueDate: dueDate || undefined,
         recurUnit: repeat, recurInterval: repeat === 'None' ? 0 : 1,
       },
-      { onSuccess: () => { setTitle(''); setDueDate(''); setRepeat('None') } },
+      {
+        onSuccess: (t) => {
+          if (projectIds.length) setProjects.mutate({ id: t.id, projectIds })
+          setTitle(''); setDueDate(''); setRepeat('None'); setProjectIds([])
+        },
+      },
     )
   }
 
@@ -91,6 +98,9 @@ export default function Todos() {
           </div>
           <div className="col-auto">
             <button className="btn btn-primary" disabled={create.isPending}>Add</button>
+          </div>
+          <div className="col-auto d-flex align-items-center">
+            <ProjectPicker value={projectIds} onChange={setProjectIds} />
           </div>
         </div>
       </form>

@@ -13,6 +13,7 @@ import type {
   RecurUnit,
   Secret,
   Todo,
+  VaultStatus,
 } from './types'
 
 // Build a query string from defined params only.
@@ -313,6 +314,36 @@ export function useDeleteSecret() {
     mutationFn: (id: string) => api.del(`/api/secrets/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['secrets'] }),
   })
+}
+
+// ---------- Secret vault (master password) ----------
+export function useVaultStatus() {
+  return useQuery({ queryKey: ['vault'], queryFn: () => api.get<VaultStatus>('/api/vault') })
+}
+
+function useVaultMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['vault'] })
+      qc.invalidateQueries({ queryKey: ['secrets'] })
+    },
+  })
+}
+
+export function useSetVault() {
+  return useVaultMutation((body: { password: string; hint?: string }) =>
+    api.post<VaultStatus>('/api/vault/set', body))
+}
+
+export function useUnlockVault() {
+  return useVaultMutation((body: { password: string }) =>
+    api.post<VaultStatus>('/api/vault/unlock', body))
+}
+
+export function useLockVault() {
+  return useVaultMutation(() => api.post('/api/vault/lock'))
 }
 
 // ---------- Search ----------

@@ -9,6 +9,10 @@ public partial class App : Application
 {
     public static DesktopSettings Settings { get; private set; } = new();
 
+    // The unlocked master-vault key for this session (null = locked / not set up).
+    public static byte[]? VaultKey { get; private set; }
+    public static bool VaultUnlocked => VaultKey is not null;
+
     private TrayManager? _tray;
 
     protected override async void OnStartup(StartupEventArgs e)
@@ -36,6 +40,8 @@ public partial class App : Application
             MessageBox.Show("Failed to open the database: " + ex.Message, "Productivity Hub");
         }
 
+        await SetupOrUnlockVaultAsync(null);
+
         var main = new MainWindow();
         main.Show();
         _tray = new TrayManager(main);
@@ -43,6 +49,31 @@ public partial class App : Application
         await NotifyExpiringSecretsAsync();
         await NotifyDueTodosAsync();
     }
+
+    // First run: offer to set a master password. Later runs: offer to unlock.
+    // Either can be skipped — the vault just stays locked and secret values hidden.
+    public static async Task SetupOrUnlockVaultAsync(Window? owner)
+    {
+        try
+        {
+            bool configured;
+            string? hint = null;
+            await using (var db = Db.Context())
+            {
+                var config = await VaultService.GetConfigAsync(db);
+                configured = config is not null;
+                hint = config?.Hint;
+            }
+
+            var win = new MasterPasswordWindow(configured, hint);
+            if (owner is not null) win.Owner = owner;
+            win.ShowDialog();
+            if (win.Key is not null) VaultKey = win.Key;
+        }
+        catch (Exception ex) { Log(ex); }
+    }
+
+    public static void LockVault() => VaultKey = null;
 
     protected override void OnExit(ExitEventArgs e)
     {

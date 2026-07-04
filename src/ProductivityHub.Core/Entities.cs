@@ -110,6 +110,19 @@ public class Secret
     [JsonIgnore] public List<SecretProject> ProjectLinks { get; set; } = [];
 }
 
+// Single-row table holding the master-password vault parameters. The password
+// itself is never stored — only the PBKDF2 salt/iterations and a verifier token
+// (a known string encrypted with the derived key) used to check the password.
+public class VaultConfig
+{
+    public string Id { get; set; } = "vault";
+    public string Salt { get; set; } = "";        // base64
+    public int Iterations { get; set; }
+    public string Verifier { get; set; } = "";     // enc:v1: envelope of a known token
+    public string? Hint { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
 public enum ProjectStatus
 {
     New,

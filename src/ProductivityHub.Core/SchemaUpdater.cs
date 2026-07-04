@@ -73,6 +73,15 @@ public static class SchemaUpdater
                 CONSTRAINT "FK_SecretProjects_Projects_ProjectId" FOREIGN KEY ("ProjectId") REFERENCES "Projects" ("Id") ON DELETE CASCADE
             );
             CREATE INDEX IF NOT EXISTS "IX_SecretProjects_ProjectId" ON "SecretProjects" ("ProjectId");
+
+            CREATE TABLE IF NOT EXISTS "VaultConfig" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_VaultConfig" PRIMARY KEY,
+                "Salt" TEXT NOT NULL,
+                "Iterations" INTEGER NOT NULL,
+                "Verifier" TEXT NOT NULL,
+                "Hint" TEXT NULL,
+                "CreatedAt" INTEGER NOT NULL
+            );
             """;
 
         await db.Database.ExecuteSqlRawAsync(sql, ct);

@@ -10,11 +10,28 @@ public partial class ProjectAssignDialog : Window
     private readonly string _type;
     private readonly Guid _id;
 
+    // Pick-only mode: no existing item yet. On Save, SelectedIds holds the chosen
+    // projects (nothing is written to the DB) so the caller can apply them after
+    // creating the item.
+    private readonly bool _pickOnly;
+    private HashSet<Guid> _preselected = [];
+    public IReadOnlyCollection<Guid> SelectedIds { get; private set; } = [];
+
     public ProjectAssignDialog(string type, Guid id)
     {
         InitializeComponent();
         _type = type;
         _id = id;
+        Loaded += async (_, _) => await LoadAsync();
+    }
+
+    // Pick projects for an item that doesn't exist yet (e.g. an add form).
+    public ProjectAssignDialog(IEnumerable<Guid> preselected)
+    {
+        InitializeComponent();
+        _type = "";
+        _pickOnly = true;
+        _preselected = preselected.ToHashSet();
         Loaded += async (_, _) => await LoadAsync();
     }
 
@@ -25,7 +42,7 @@ public partial class ProjectAssignDialog : Window
             .Where(p => p.Status == ProjectStatus.New || p.Status == ProjectStatus.Active)
             .OrderBy(p => p.Name).ToListAsync();
 
-        var linkedIds = await LinkedProjectIds(db);
+        var linkedIds = _pickOnly ? _preselected : await LinkedProjectIds(db);
         // Include already-linked (possibly closed) projects too.
         var linkedClosed = await db.Projects
             .Where(p => linkedIds.Contains(p.Id) && p.Status != ProjectStatus.New && p.Status != ProjectStatus.Active)
@@ -61,6 +78,14 @@ public partial class ProjectAssignDialog : Window
             .Where(c => c.IsChecked == true)
             .Select(c => (Guid)c.Tag!)
             .ToHashSet();
+
+        if (_pickOnly)
+        {
+            SelectedIds = chosen;
+            DialogResult = true;
+            Close();
+            return;
+        }
 
         await using var db = Db.Context();
         switch (_type)

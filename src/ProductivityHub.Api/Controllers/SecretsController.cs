@@ -1,26 +1,56 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProductivityHub.Core;
 using ProductivityHub.Core.Data;
 using ProductivityHub.Core.Data.Entities;
 using ProductivityHub.Api.Models;
+using ProductivityHub.Api.Services;
 
 namespace ProductivityHub.Api.Controllers;
 
 [ApiController]
 [Route("api/secrets")]
-public class SecretsController(AppDbContext db) : ControllerBase
+public class SecretsController(AppDbContext db, VaultSession vault) : ControllerBase
 {
+    // HasValue: a secret value is stored. Value: the decrypted plaintext, present
+    // only when the vault is unlocked (null when locked). Locked: value is stored
+    // but the vault must be unlocked to reveal it.
     public record SecretDto(Guid Id, string Name, string? ClientId, string? Value,
         DateOnly ExpiresOn, string? Notes, List<string> Notify, string? Link,
-        List<ProjectRef> Projects, int DaysLeft);
+        List<ProjectRef> Projects, int DaysLeft, bool HasValue, bool Locked);
 
     public record SaveSecretRequest(string Name, string? ClientId, string? Value, DateOnly ExpiresOn,
         string? Notes, List<string>? Notify, string? Link);
 
-    private static SecretDto ToDto(Secret s) =>
-        new(s.Id, s.Name, s.ClientId, s.Value, s.ExpiresOn, s.Notes, SplitNotify(s.NotifyList), s.Link,
+    private SecretDto ToDto(Secret s)
+    {
+        var hasValue = !string.IsNullOrEmpty(s.Value);
+        var encrypted = SecretCrypto.IsEncrypted(s.Value);
+        var locked = encrypted && !vault.IsUnlocked;
+        string? value = null;
+        if (hasValue && !locked)
+        {
+            try { value = SecretCrypto.Decrypt(s.Value, vault.Key ?? []); }
+            catch { value = null; }   // wrong key / corrupt — treat as not viewable
+        }
+        return new(s.Id, s.Name, s.ClientId, value, s.ExpiresOn, s.Notes, SplitNotify(s.NotifyList), s.Link,
             s.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList(),
-            s.ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber);
+            s.ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber, hasValue, locked);
+    }
+
+    // Prepares a submitted value for storage: encrypts it when the vault is
+    // unlocked, rejects it when a vault exists but is locked, and stores it as
+    // plaintext only when no vault has been set up yet (it'll be encrypted when
+    // the master password is first set). Returns null on error via `error`.
+    private async Task<(bool ok, string? stored, IActionResult? error)> PrepareValueAsync(
+        string? submitted, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(submitted)) return (true, null, null);
+        if (vault.IsUnlocked) return (true, SecretCrypto.Encrypt(submitted, vault.Key!), null);
+        if (await VaultService.IsConfiguredAsync(db, ct))
+            return (false, null, Conflict("The vault is locked. Unlock it before saving a secret value."));
+        return (true, submitted, null);   // no vault yet
+    }
 
     private static List<string> SplitNotify(string? raw) =>
         (raw ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
@@ -56,13 +86,15 @@ public class SecretsController(AppDbContext db) : ControllerBase
     public async Task<IActionResult> Create(SaveSecretRequest req, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest("Name is required.");
+        var (ok, storedValue, error) = await PrepareValueAsync(req.Value, ct);
+        if (!ok) return error!;
         var now = DateTimeOffset.UtcNow;
         var secret = new Secret
         {
             Id = Guid.NewGuid(),
             Name = req.Name.Trim(),
             ClientId = string.IsNullOrWhiteSpace(req.ClientId) ? null : req.ClientId.Trim(),
-            Value = string.IsNullOrWhiteSpace(req.Value) ? null : req.Value,
+            Value = storedValue,
             ExpiresOn = req.ExpiresOn,
             Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim(),
             NotifyList = JoinNotify(req.Notify),
@@ -81,9 +113,17 @@ public class SecretsController(AppDbContext db) : ControllerBase
         var s = await db.Secrets.FindAsync([id], ct);
         if (s is null) return NotFound();
         if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest("Name is required.");
+        // Only touch the stored value when a new one is submitted, so editing other
+        // fields while the vault is locked can't wipe the secret. To clear a value,
+        // delete the secret.
+        if (!string.IsNullOrEmpty(req.Value))
+        {
+            var (ok, storedValue, error) = await PrepareValueAsync(req.Value, ct);
+            if (!ok) return error!;
+            s.Value = storedValue;
+        }
         s.Name = req.Name.Trim();
         s.ClientId = string.IsNullOrWhiteSpace(req.ClientId) ? null : req.ClientId.Trim();
-        s.Value = string.IsNullOrWhiteSpace(req.Value) ? null : req.Value;
         s.ExpiresOn = req.ExpiresOn;
         s.Notes = string.IsNullOrWhiteSpace(req.Notes) ? null : req.Notes.Trim();
         s.NotifyList = JoinNotify(req.Notify);

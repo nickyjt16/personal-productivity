@@ -9,6 +9,8 @@ public partial class TodosView : UserControl
 {
     private Guid? _editingId;
     private Guid? _filterProjectId;
+    // Projects chosen in the add form, applied when a new todo is created.
+    private HashSet<Guid> _pendingProjectIds = [];
 
     public TodosView()
     {
@@ -90,12 +92,15 @@ public partial class TodosView : UserControl
             }
             else
             {
+                var newId = Guid.NewGuid();
                 db.Todos.Add(new TodoItem
                 {
-                    Id = Guid.NewGuid(), Title = title, Notes = notes, Priority = priority,
+                    Id = newId, Title = title, Notes = notes, Priority = priority,
                     DueDate = due, RecurUnit = recur, RecurInterval = recurInterval,
                     CreatedAt = DateTimeOffset.UtcNow,
                 });
+                foreach (var pid in _pendingProjectIds)
+                    db.TodoProjects.Add(new TodoProject { TodoItemId = newId, ProjectId = pid });
                 await db.SaveChangesAsync();
             }
         }
@@ -107,6 +112,8 @@ public partial class TodosView : UserControl
     {
         var row = (TodoRow)((FrameworkElement)sender).DataContext;
         _editingId = row.Id;
+        _pendingProjectIds = [];
+        UpdatePickBtn();
         TitleBox.Text = row.Title;
         NotesBox.Text = row.Notes ?? "";
         PriorityBox.SelectedItem = row.Priority.ToString();
@@ -121,6 +128,8 @@ public partial class TodosView : UserControl
     private void ResetInput()
     {
         _editingId = null;
+        _pendingProjectIds = [];
+        UpdatePickBtn();
         TitleBox.Text = "";
         NotesBox.Text = "";
         PriorityBox.SelectedItem = "Medium";
@@ -193,4 +202,25 @@ public partial class TodosView : UserControl
         var dlg = new ProjectAssignDialog("todo", row.Id) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true) await LoadAsync();
     }
+
+    // The "🏷 Projects" button on the add/edit form: assigns directly when editing,
+    // or collects the choice to apply when a new todo is created.
+    private async void PickProjects_Click(object sender, RoutedEventArgs e)
+    {
+        if (_editingId is Guid id)
+        {
+            var dlg = new ProjectAssignDialog("todo", id) { Owner = Window.GetWindow(this) };
+            if (dlg.ShowDialog() == true) await LoadAsync();
+            return;
+        }
+        var pick = new ProjectAssignDialog(_pendingProjectIds) { Owner = Window.GetWindow(this) };
+        if (pick.ShowDialog() == true)
+        {
+            _pendingProjectIds = pick.SelectedIds.ToHashSet();
+            UpdatePickBtn();
+        }
+    }
+
+    private void UpdatePickBtn() =>
+        PickProjectsBtn.Content = _pendingProjectIds.Count == 0 ? "🏷 Projects" : $"🏷 Projects ({_pendingProjectIds.Count})";
 }

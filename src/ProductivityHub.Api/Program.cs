@@ -20,6 +20,9 @@ var connectionString = builder.Configuration.GetConnectionString("AppDb")
     ?? AppPaths.ConnectionString;
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlite(connectionString));
 
+// Holds the unlocked secret-vault key for the lifetime of the server process.
+builder.Services.AddSingleton<VaultSession>();
+
 // Teams→OneDrive link import (drops files in a synced folder; we drain them into bookmarks).
 builder.Services.Configure<LinkImportOptions>(builder.Configuration.GetSection("LinkImport"));
 builder.Services.AddScoped<LinkImportService>();

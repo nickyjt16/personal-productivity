@@ -1,8 +1,110 @@
 import { useState } from 'react'
-import { useCreateSecret, useDeleteSecret, useSecrets, useSetItemProjects, useUpdateSecret } from '../api/hooks'
+import {
+  useCreateSecret,
+  useDeleteSecret,
+  useLockVault,
+  useSecrets,
+  useSetItemProjects,
+  useSetVault,
+  useUnlockVault,
+  useUpdateSecret,
+  useVaultStatus,
+} from '../api/hooks'
 import type { Secret } from '../api/types'
 import ProjectBadges from '../components/ProjectBadges'
 import ProjectPicker from '../components/ProjectPicker'
+
+// Master-password bar: set a password on first use, unlock/lock thereafter.
+function VaultBar() {
+  const { data: status } = useVaultStatus()
+  const setVault = useSetVault()
+  const unlock = useUnlockVault()
+  const lock = useLockVault()
+
+  const [pwd, setPwd] = useState('')
+  const [confirm, setConfirm] = useState('')
+  const [hint, setHint] = useState('')
+  const [err, setErr] = useState('')
+
+  if (!status) return null
+
+  // Already set up and unlocked.
+  if (status.configured && status.unlocked) {
+    return (
+      <div className="alert alert-success d-flex align-items-center justify-content-between py-2 mb-3">
+        <span>🔓 Secret values are unlocked and visible.</span>
+        <button className="btn btn-sm btn-outline-success" onClick={() => lock.mutate(undefined)}>Lock</button>
+      </div>
+    )
+  }
+
+  // Set up but locked — offer to unlock.
+  if (status.configured && !status.unlocked) {
+    return (
+      <form
+        className="alert alert-warning mb-3"
+        onSubmit={(e) => {
+          e.preventDefault()
+          setErr('')
+          unlock.mutate({ password: pwd }, {
+            onError: () => setErr('Wrong password. Try again.'),
+            onSuccess: () => setPwd(''),
+          })
+        }}
+      >
+        <div className="fw-semibold mb-1">🔒 Secret values are locked</div>
+        {status.hint && <div className="small text-muted mb-2">Hint: {status.hint}</div>}
+        <div className="d-flex gap-2 align-items-start">
+          <input type="password" className="form-control form-control-sm" style={{ maxWidth: 260 }}
+            value={pwd} placeholder="Master password" onChange={(e) => setPwd(e.target.value)} />
+          <button className="btn btn-sm btn-primary" disabled={unlock.isPending || !pwd}>Unlock</button>
+        </div>
+        {err && <div className="text-danger small mt-1">{err}</div>}
+      </form>
+    )
+  }
+
+  // Not configured yet — offer to set a master password.
+  return (
+    <form
+      className="alert alert-secondary mb-3"
+      onSubmit={(e) => {
+        e.preventDefault()
+        setErr('')
+        if (pwd.length < 4) { setErr('Password must be at least 4 characters.'); return }
+        if (pwd !== confirm) { setErr("The passwords don't match."); return }
+        setVault.mutate({ password: pwd, hint: hint.trim() || undefined }, {
+          onSuccess: () => { setPwd(''); setConfirm(''); setHint('') },
+          onError: (e2) => setErr(e2 instanceof Error ? e2.message : 'Could not set the password.'),
+        })
+      }}
+    >
+      <div className="fw-semibold mb-1">🔒 Protect your secret values</div>
+      <div className="small text-muted mb-2">
+        Set a master password to encrypt secret values. It is never stored and can’t be reset — if you
+        forget it you’ll need to re-enter your secrets. The rest of the app is unaffected.
+      </div>
+      <div className="row g-2">
+        <div className="col-auto">
+          <input type="password" className="form-control form-control-sm" value={pwd}
+            placeholder="Master password" onChange={(e) => setPwd(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <input type="password" className="form-control form-control-sm" value={confirm}
+            placeholder="Confirm password" onChange={(e) => setConfirm(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <input className="form-control form-control-sm" value={hint}
+            placeholder="Hint (optional)" onChange={(e) => setHint(e.target.value)} />
+        </div>
+        <div className="col-auto">
+          <button className="btn btn-sm btn-primary" disabled={setVault.isPending}>Set master password</button>
+        </div>
+      </div>
+      {err && <div className="text-danger small mt-1">{err}</div>}
+    </form>
+  )
+}
 
 function expiryBadge(daysLeft: number): { variant: string; label: string } {
   if (daysLeft < 0) return { variant: 'danger', label: `Expired ${-daysLeft}d ago` }
@@ -28,6 +130,7 @@ export default function Secrets() {
   const [link, setLink] = useState('')
   const [projectIds, setProjectIds] = useState<string[]>([])
   const [reveal, setReveal] = useState<Record<string, boolean>>({})
+  const [saveError, setSaveError] = useState('')
 
   function reset() {
     setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn('')
@@ -37,18 +140,23 @@ export default function Secrets() {
   function save(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !expiresOn) return
+    setSaveError('')
     const body = {
       name: name.trim(), clientId: clientId.trim() || undefined, value: value || undefined,
       expiresOn, notes: notes.trim() || undefined, link: link.trim() || undefined,
       notify: notify.split('\n').map((x) => x.trim()).filter(Boolean),
     }
+    const onError = (err: unknown) =>
+      setSaveError(err instanceof Error ? err.message : 'Could not save the secret.')
     if (editingId) {
       update.mutate({ id: editingId, ...body }, {
         onSuccess: () => { setProjects.mutate({ id: editingId, projectIds }); reset() },
+        onError,
       })
     } else {
       create.mutate(body, {
         onSuccess: (s) => { setProjects.mutate({ id: s.id, projectIds }); reset() },
+        onError,
       })
     }
   }
@@ -66,6 +174,8 @@ export default function Secrets() {
         Track client secrets & keys and their expiry. You’ll get a heads-up a week before one expires.
         Stored locally on this device only.
       </p>
+
+      <VaultBar />
 
       <form className="card card-body mb-4" onSubmit={save}>
         <div className="row g-2">
@@ -110,6 +220,7 @@ export default function Secrets() {
             {editingId && <button type="button" className="btn btn-outline-secondary" onClick={reset}>Cancel</button>}
             <ProjectPicker value={projectIds} onChange={setProjectIds} />
           </div>
+          {saveError && <div className="col-12 text-danger small">{saveError}</div>}
         </div>
       </form>
 
@@ -125,7 +236,9 @@ export default function Secrets() {
                   <div className="flex-grow-1">
                     <span className="fw-semibold">{s.name}</span>
                     {s.clientId && <span className="text-muted small ms-2">{s.clientId}</span>}
-                    {s.value && (
+                    {s.locked ? (
+                      <div className="small text-muted">🔒 Value hidden — unlock to view</div>
+                    ) : s.value && (
                       <div className="small text-muted font-monospace">
                         {reveal[s.id] ? s.value : '••••••••'}
                         <button className="btn btn-sm btn-link p-0 ms-2"
