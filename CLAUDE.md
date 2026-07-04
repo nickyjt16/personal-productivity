@@ -92,9 +92,13 @@ docs/                        Extra docs (e.g. Teams link import).
 - **Custom WPF ComboBox template** renders `SelectionBoxItem.ToString()`, not `DisplayMemberPath`. Give
   combo item models a `ToString()` override (see `LinkRow`/`ComboItem` in `Rows.cs`) and set
   `SelectedValuePath` rather than `DisplayMemberPath`.
-- **Secrets are stored in plain text** in the DB by design (local-only). Encryption is intentionally
-  not implemented — if asked, discuss DPAPI (local-only) vs a master password (survives sync) first,
-  because DPAPI conflicts with the OneDrive-sync feature.
+- **Secret values are optionally encrypted** behind a master password (AES-GCM, PBKDF2 key). See
+  `SecretCrypto` + `VaultService` (Core), `VaultController` + `VaultSession` singleton (API), and
+  `MasterPasswordWindow` + `App.VaultKey` (desktop). Only the `Secret.Value` is encrypted (as an
+  `enc:v1:` envelope) — names/expiry stay plaintext so reminders and search keep working. The API
+  decrypts on read only when the session is unlocked; the desktop uses the in-process key. There is
+  **no password recovery** by design (a stored hint is the only aid). If no master password is set,
+  values are stored in plain text.
 - Don't commit real secrets. The `.db` file is git-ignored.
 
 ## Build, run, test
