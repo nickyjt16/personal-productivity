@@ -120,6 +120,9 @@ export default function Secrets() {
   const remove = useDeleteSecret()
   const setProjects = useSetItemProjects('secrets')
 
+  const { data: vault } = useVaultStatus()
+  const notConfigured = vault?.configured === false
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [clientId, setClientId] = useState('')
@@ -178,7 +181,9 @@ export default function Secrets() {
             Stored locally on this device only.
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => (showAdd ? reset() : setShowAdd(true))}>
+        <button className="btn btn-primary" disabled={notConfigured}
+          title={notConfigured ? 'Set a master password first' : undefined}
+          onClick={() => (showAdd ? reset() : setShowAdd(true))}>
           {showAdd ? 'Close' : '＋ Add secret'}
         </button>
       </div>

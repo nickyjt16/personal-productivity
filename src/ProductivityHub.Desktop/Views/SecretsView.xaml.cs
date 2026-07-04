@@ -72,9 +72,12 @@ public partial class SecretsView : UserControl
         }
         else
         {
-            LockStatusText.Text = "Secret values are not encrypted yet. Set a master password to protect them.";
+            LockStatusText.Text = "Set a master password before adding secrets.";
             LockToggleBtn.Content = "Set master password";
         }
+        // Adding a secret requires a master password to be set first.
+        AddToggleBtn.IsEnabled = _configured;
+        AddToggleBtn.ToolTip = _configured ? null : "Set a master password first";
     }
 
     private async void LockToggle_Click(object sender, RoutedEventArgs e)
@@ -107,6 +110,11 @@ public partial class SecretsView : UserControl
         if (name.Length == 0 || ExpiresBox.SelectedDate is not DateTime dt)
         {
             MessageBox.Show("Name and an expiry date are required.", "Secrets");
+            return;
+        }
+        if (_editingId is null && !_configured)
+        {
+            MessageBox.Show("Set a master password first (button at the top) before adding secrets.", "Secrets");
             return;
         }
         var expires = DateOnly.FromDateTime(dt);

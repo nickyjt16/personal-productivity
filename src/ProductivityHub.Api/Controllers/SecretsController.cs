@@ -86,6 +86,8 @@ public class SecretsController(AppDbContext db, VaultSession vault) : Controller
     public async Task<IActionResult> Create(SaveSecretRequest req, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(req.Name)) return BadRequest("Name is required.");
+        if (!await VaultService.IsConfiguredAsync(db, ct))
+            return Conflict("Set a master password before adding secrets.");
         var (ok, storedValue, error) = await PrepareValueAsync(req.Value, ct);
         if (!ok) return error!;
         var now = DateTimeOffset.UtcNow;

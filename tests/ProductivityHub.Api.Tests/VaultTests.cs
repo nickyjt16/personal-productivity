@@ -17,21 +17,25 @@ public class VaultTests : IClassFixture<ApiFactory>
     [Fact]
     public async Task Secret_value_is_encrypted_at_rest_and_hidden_when_locked()
     {
-        // Before a vault exists, values are stored as-is.
+        // Before a vault exists, secrets can't be added at all.
         var status0 = await _client.GetFromJsonAsync<JsonElement>("/api/vault", Json);
         Assert.False(status0.GetProperty("configured").GetBoolean());
 
-        var created = await _client.PostAsJsonAsync("/api/secrets",
+        var blockedNoVault = await _client.PostAsJsonAsync("/api/secrets",
             new { name = "AAD app", value = "s3cr3t-value", expiresOn = "2027-01-01" });
-        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, blockedNoVault.StatusCode);
 
-        // Set the master password — this encrypts existing plaintext values.
+        // Set the master password, then the secret can be created (encrypted).
         var set = await _client.PostAsJsonAsync("/api/vault/set",
             new { password = "correct horse", hint = "the animal" });
         Assert.Equal(HttpStatusCode.OK, set.StatusCode);
         var setBody = await set.Content.ReadFromJsonAsync<JsonElement>(Json);
         Assert.True(setBody.GetProperty("configured").GetBoolean());
         Assert.True(setBody.GetProperty("unlocked").GetBoolean());
+
+        var created = await _client.PostAsJsonAsync("/api/secrets",
+            new { name = "AAD app", value = "s3cr3t-value", expiresOn = "2027-01-01" });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
 
         // Unlocked: the value round-trips back to the original plaintext.
         var unlockedList = await _client.GetFromJsonAsync<JsonElement>("/api/secrets", Json);

@@ -97,8 +97,10 @@ docs/                        Extra docs (e.g. Teams link import).
   `MasterPasswordWindow` + `App.VaultKey` (desktop). Only the `Secret.Value` is encrypted (as an
   `enc:v1:` envelope) — names/expiry stay plaintext so reminders and search keep working. The API
   decrypts on read only when the session is unlocked; the desktop uses the in-process key. There is
-  **no password recovery** by design (a stored hint is the only aid). If no master password is set,
-  values are stored in plain text.
+  **no password recovery** by design (a stored hint is the only aid). Creating a secret is **blocked
+  until a master password is set** (`SecretsController.Create` returns 409; both UIs disable the add
+  button) — so new secret values are always encrypted. Legacy plaintext values from before the vault
+  feature are encrypted in place when the password is first set (`VaultService.EncryptExistingAsync`).
 - Don't commit real secrets. The `.db` file is git-ignored.
 
 ## Build, run, test

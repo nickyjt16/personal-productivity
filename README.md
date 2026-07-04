@@ -46,8 +46,8 @@ There are **two versions of the app and they share the same data**, so you can u
   and the project view shows progress across its items.
 - **🔑 Secrets** — track API keys, passwords, client secrets and their **expiry dates**. You get a
   warning a week before one expires (and again on the desktop app at launch). Each secret can have a
-  link to where it's managed and can be linked to projects. Secret **values can be encrypted** behind
-  a master password you set (see "Your data" below).
+  link to where it's managed and can be linked to projects. You must **set a master password before
+  adding secrets** — values are then encrypted with it (see "Your data" below).
 - **🍅 Pomodoro** — a focus timer with a floating, always-on-top mini window so it stays visible while
   you work in other apps.
 - **🔎 Search** — type in the search box and press **Enter** to search across everything.
@@ -181,10 +181,10 @@ Productivity Hub**. The desktop or web app must be running for the save to land.
   to it), so you're protected against accidents.
 - **Settings → Backup & restore** lets you export everything to a file, or restore from one — handy for
   moving to a new PC.
-- **Secret values** can be **encrypted with a master password**. On the Secrets page, set a master
-  password (the desktop app also offers this on first launch). Values are then encrypted (AES-GCM,
-  key derived from your password) and you unlock them per session to view or edit them. Everything
-  else — names, expiry dates, notes — stays readable so expiry reminders keep working.
+- **Secret values are encrypted with a master password.** You must set a master password before you
+  can add any secret (on the Secrets page, or on the desktop app's first launch). Values are then
+  encrypted (AES-GCM, key derived from your password) and you unlock them per session to view or edit
+  them. Everything else — names, expiry dates, notes — stays readable so expiry reminders keep working.
   - The password is **never stored and can't be reset**. If you forget it, you'll need to re-enter the
     secrets (an optional hint can jog your memory). This is what keeps them safe even in a backup or a
     synced copy. If you'd rather not use it, just skip it — values are then stored in plain text.
