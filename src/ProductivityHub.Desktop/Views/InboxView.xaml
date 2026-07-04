@@ -24,6 +24,8 @@
                             <DockPanel>
                                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                                     <Button Content="→ Todo" Click="ToTodo_Click" Margin="3,0" Padding="7,4" />
+                                    <Button Content="→ Note" ToolTip="Save as a note for long-term storage"
+                                            Click="ToNote_Click" Margin="3,0" Padding="7,4" />
                                     <Button Content="Done" Click="Process_Click" Margin="3,0" Padding="7,4" />
                                     <Button Content="✕" Click="Delete_Click" Margin="3,0" Padding="7,4" />
                                 </StackPanel>

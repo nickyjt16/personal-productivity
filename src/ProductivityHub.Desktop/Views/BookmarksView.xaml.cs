@@ -40,7 +40,18 @@ public partial class BookmarksView : UserControl
             await db.SaveChangesAsync();
         }
         UrlBox.Text = ""; TitleBox.Text = "";
+        ShowAddCard(false);
         await LoadAsync();
+    }
+
+    private void ToggleAdd_Click(object sender, RoutedEventArgs e) =>
+        ShowAddCard(AddCard.Visibility != Visibility.Visible);
+
+    private void ShowAddCard(bool show)
+    {
+        AddCard.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        AddToggleBtn.Content = show ? "Close" : "＋ Add bookmark";
+        if (show) UrlBox.Focus();
     }
 
     private async void ToggleRead_Click(object sender, RoutedEventArgs e)

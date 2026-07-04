@@ -13,11 +13,13 @@
                 <TextBlock Text="Project:" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,6,0" />
                 <ComboBox x:Name="FilterCombo" Width="160" SelectedValuePath="Id"
                           SelectionChanged="Filter_Changed" />
+                <Button x:Name="AddToggleBtn" Content="＋ Add task" Style="{StaticResource AccentButton}"
+                        Click="ToggleAdd_Click" Margin="8,0,0,0" />
             </StackPanel>
             <TextBlock Text="✅ Todos" Style="{StaticResource Heading}" Margin="0" />
         </DockPanel>
 
-        <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12">
+        <Border x:Name="AddCard" Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12" Visibility="Collapsed">
             <StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <TextBox x:Name="TitleBox" Width="340" Tag="What needs doing?" />

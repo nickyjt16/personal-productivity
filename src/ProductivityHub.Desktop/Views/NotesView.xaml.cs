@@ -8,17 +8,40 @@ namespace ProductivityHub.Desktop.Views;
 public partial class NotesView : UserControl
 {
     private Guid? _selectedId;
+    private Guid? _filterProjectId;
 
     public NotesView()
     {
         InitializeComponent();
-        Loaded += async (_, _) => await LoadListAsync();
+        Loaded += async (_, _) => { await LoadFilterAsync(); await LoadListAsync(); };
+    }
+
+    private async Task LoadFilterAsync()
+    {
+        await using var db = Db.Context();
+        var projects = await db.Projects
+            .Where(p => p.Status == ProjectStatus.New || p.Status == ProjectStatus.Active)
+            .OrderBy(p => p.Name)
+            .Select(p => new { p.Id, p.Name }).ToListAsync();
+
+        var items = new List<ComboItem> { new() { Id = null, Label = "All projects" } };
+        items.AddRange(projects.Select(p => new ComboItem { Id = p.Id, Label = p.Name }));
+        FilterCombo.ItemsSource = items;
+        FilterCombo.SelectedIndex = 0;
+    }
+
+    private void Filter_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        _filterProjectId = FilterCombo.SelectedValue as Guid?;
+        if (IsLoaded) _ = LoadListAsync();
     }
 
     private async Task LoadListAsync()
     {
         await using var db = Db.Context();
-        var notes = await db.Notes.OrderByDescending(n => n.UpdatedAt).ToListAsync();
+        var q = db.Notes.AsQueryable();
+        if (_filterProjectId is Guid pid) q = q.Where(n => n.ProjectLinks.Any(l => l.ProjectId == pid));
+        var notes = await q.OrderByDescending(n => n.UpdatedAt).ToListAsync();
         ListHost.ItemsSource = notes.Select(n => new NoteListRow
         {
             Id = n.Id,

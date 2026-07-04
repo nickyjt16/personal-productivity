@@ -154,12 +154,25 @@ public partial class SecretsView : UserControl
         await LoadAsync();
     }
 
+    private void ToggleAdd_Click(object sender, RoutedEventArgs e)
+    {
+        if (AddCard.Visibility == Visibility.Visible) Reset();
+        else ShowAddCard(true);
+    }
+
+    private void ShowAddCard(bool show)
+    {
+        AddCard.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        AddToggleBtn.Content = show ? "Close" : "＋ Add secret";
+    }
+
     private void Edit_Click(object sender, RoutedEventArgs e)
     {
         var row = (SecretRow)((FrameworkElement)sender).DataContext;
         _editingId = row.Id;
         _pendingProjectIds = [];
         UpdatePickBtn();
+        ShowAddCard(true);
         NameBox.Text = row.Name;
         ClientBox.Text = row.ClientId ?? "";
         ValueBox.Text = row.Value ?? "";
@@ -210,6 +223,7 @@ public partial class SecretsView : UserControl
         ExpiresBox.SelectedDate = null;
         AddBtn.Content = "Add";
         CancelBtn.Visibility = Visibility.Collapsed;
+        ShowAddCard(false);
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)

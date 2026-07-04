@@ -101,6 +101,17 @@ export function useInboxToTodo() {
   })
 }
 
+export function useInboxToNote() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.post(`/api/inbox/${id}/to-note`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['inbox'] })
+      qc.invalidateQueries({ queryKey: ['notes'] })
+    },
+  })
+}
+
 export function useDeleteInbox() {
   const qc = useQueryClient()
   return useMutation({

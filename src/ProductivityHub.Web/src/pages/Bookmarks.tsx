@@ -22,6 +22,7 @@ export default function Bookmarks() {
   const [url, setUrl] = useState('')
   const [title, setTitle] = useState('')
   const [importMsg, setImportMsg] = useState<string | null>(null)
+  const [showAdd, setShowAdd] = useState(false)
 
   function add(e: React.FormEvent) {
     e.preventDefault()
@@ -51,6 +52,9 @@ export default function Bookmarks() {
           <button className="btn btn-outline-primary" onClick={checkForLinks} disabled={importLinks.isPending}>
             {importLinks.isPending ? 'Checking…' : '↻ Check for new links'}
           </button>
+          <button className="btn btn-primary" onClick={() => setShowAdd((s) => !s)}>
+            {showAdd ? 'Close' : '＋ Add bookmark'}
+          </button>
         </div>
       </div>
 
@@ -62,6 +66,7 @@ export default function Bookmarks() {
         </div>
       )}
 
+      {showAdd && (
       <form className="card card-body mb-4" onSubmit={add}>
         <div className="row g-2 align-items-end">
           <div className="col-md-5">
@@ -79,6 +84,7 @@ export default function Bookmarks() {
           </div>
         </div>
       </form>
+      )}
 
       {isLoading ? <p>Loading…</p> : items.length === 0 ? (
         <p className="text-muted">No bookmarks saved yet.</p>

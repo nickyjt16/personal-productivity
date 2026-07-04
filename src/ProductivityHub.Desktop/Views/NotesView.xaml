@@ -6,7 +6,13 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="📝 Notes" Style="{StaticResource Heading}" />
+        <DockPanel Grid.Row="0" Margin="0,0,0,4">
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                <TextBlock Text="Project:" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <ComboBox x:Name="FilterCombo" Width="160" SelectedValuePath="Id" SelectionChanged="Filter_Changed" />
+            </StackPanel>
+            <TextBlock Text="📝 Notes" Style="{StaticResource Heading}" Margin="0" />
+        </DockPanel>
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="260" />

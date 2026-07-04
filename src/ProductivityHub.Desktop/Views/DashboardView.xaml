@@ -6,19 +6,22 @@
             <TextBlock x:Name="Greeting" Style="{StaticResource Heading}" />
 
             <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0">
+                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0" Cursor="Hand"
+                        Tag="todos" MouseLeftButtonUp="Card_Click" ToolTip="Go to Todos">
                     <StackPanel>
                         <TextBlock x:Name="OpenCount" FontSize="26" FontWeight="Bold" />
                         <TextBlock Text="Open tasks" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0">
+                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0" Cursor="Hand"
+                        Tag="inbox" MouseLeftButtonUp="Card_Click" ToolTip="Go to Inbox">
                     <StackPanel>
                         <TextBlock x:Name="InboxCount" FontSize="26" FontWeight="Bold" />
                         <TextBlock Text="To triage" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Width="150">
+                <Border Style="{StaticResource Card}" Width="150" Cursor="Hand"
+                        Tag="bookmarks" MouseLeftButtonUp="Card_Click" ToolTip="Go to Bookmarks">
                     <StackPanel>
                         <TextBlock x:Name="UnreadCount" FontSize="26" FontWeight="Bold" />
                         <TextBlock Text="Unread links" Style="{StaticResource Muted}" />

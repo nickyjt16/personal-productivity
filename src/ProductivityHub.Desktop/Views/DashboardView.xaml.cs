@@ -35,6 +35,12 @@ public partial class DashboardView : UserControl
         OverdueBadge.Visibility = overdue > 0 ? System.Windows.Visibility.Visible : System.Windows.Visibility.Collapsed;
     }
 
+    private void Card_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        var key = (string?)((System.Windows.FrameworkElement)sender).Tag;
+        if (key != null) (System.Windows.Window.GetWindow(this) as MainWindow)?.Navigate(key);
+    }
+
     private async void Toggle_Click(object sender, System.Windows.RoutedEventArgs e)
     {
         var row = (TodoRow)((System.Windows.FrameworkElement)sender).DataContext;

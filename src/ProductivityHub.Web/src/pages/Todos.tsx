@@ -42,6 +42,7 @@ export default function Todos() {
   const [repeat, setRepeat] = useState<RecurUnit>('None')
   const [projectIds, setProjectIds] = useState<string[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [showAdd, setShowAdd] = useState(false)
 
   function add(e: React.FormEvent) {
     e.preventDefault()
@@ -64,9 +65,15 @@ export default function Todos() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">✅ Todos</h2>
-        <ProjectFilter value={projectFilter} onChange={setProjectFilter} />
+        <div className="d-flex align-items-center gap-2">
+          <ProjectFilter value={projectFilter} onChange={setProjectFilter} />
+          <button className="btn btn-primary" onClick={() => setShowAdd((s) => !s)}>
+            {showAdd ? 'Close' : '＋ Add task'}
+          </button>
+        </div>
       </div>
 
+      {showAdd && (
       <form className="card card-body mb-4" onSubmit={add}>
         <div className="row g-2 align-items-end">
           <div className="col">
@@ -104,6 +111,7 @@ export default function Todos() {
           </div>
         </div>
       </form>
+      )}
 
       {isLoading ? <p>Loading…</p> : todos.length === 0 ? (
         <p className="text-muted">No tasks yet. Add one above.</p>

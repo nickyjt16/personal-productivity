@@ -56,7 +56,8 @@ public partial class MainWindow : Window
         }
     }
 
-    private void Navigate(string key, Button? source = null)
+    // Public so views (e.g. the dashboard cards) can navigate between sections.
+    public void Navigate(string key, Button? source = null)
     {
         MainContent.Content = CreateView(key);
         Highlight(source ?? NavPanel.Children.OfType<Button>().FirstOrDefault(b => (string?)b.Tag == key));

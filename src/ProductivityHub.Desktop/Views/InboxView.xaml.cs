@@ -54,6 +54,20 @@ public partial class InboxView : UserControl
         await LoadAsync();
     }
 
+    private async void ToNote_Click(object sender, RoutedEventArgs e)
+    {
+        var item = (InboxItem)((FrameworkElement)sender).DataContext;
+        var now = DateTimeOffset.UtcNow;
+        await using (var db = Db.Context())
+        {
+            db.Notes.Add(new Note { Id = Guid.NewGuid(), Body = item.Text, CreatedAt = now, UpdatedAt = now });
+            var i = await db.InboxItems.FindAsync(item.Id);
+            if (i != null) { i.IsProcessed = true; i.ProcessedAt = now; }
+            await db.SaveChangesAsync();
+        }
+        await LoadAsync();
+    }
+
     private async void Process_Click(object sender, RoutedEventArgs e)
     {
         var item = (InboxItem)((FrameworkElement)sender).DataContext;

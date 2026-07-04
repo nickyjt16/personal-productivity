@@ -131,10 +131,11 @@ export default function Secrets() {
   const [projectIds, setProjectIds] = useState<string[]>([])
   const [reveal, setReveal] = useState<Record<string, boolean>>({})
   const [saveError, setSaveError] = useState('')
+  const [showAdd, setShowAdd] = useState(false)
 
   function reset() {
     setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn('')
-    setNotes(''); setNotify(''); setLink(''); setProjectIds([])
+    setNotes(''); setNotify(''); setLink(''); setProjectIds([]); setShowAdd(false)
   }
 
   function save(e: React.FormEvent) {
@@ -164,19 +165,27 @@ export default function Secrets() {
   function edit(s: Secret) {
     setEditingId(s.id); setName(s.name); setClientId(s.clientId ?? ''); setValue(s.value ?? '')
     setExpiresOn(s.expiresOn.slice(0, 10)); setNotes(s.notes ?? ''); setNotify(s.notify.join('\n'))
-    setLink(s.link ?? ''); setProjectIds(s.projects.map((p) => p.id))
+    setLink(s.link ?? ''); setProjectIds(s.projects.map((p) => p.id)); setShowAdd(true)
   }
 
   return (
     <div>
-      <h2 className="mb-1">🔑 Secrets</h2>
-      <p className="text-muted">
-        Track client secrets & keys and their expiry. You’ll get a heads-up a week before one expires.
-        Stored locally on this device only.
-      </p>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h2 className="mb-1">🔑 Secrets</h2>
+          <p className="text-muted">
+            Track client secrets & keys and their expiry. You’ll get a heads-up a week before one expires.
+            Stored locally on this device only.
+          </p>
+        </div>
+        <button className="btn btn-primary" onClick={() => (showAdd ? reset() : setShowAdd(true))}>
+          {showAdd ? 'Close' : '＋ Add secret'}
+        </button>
+      </div>
 
       <VaultBar />
 
+      {(showAdd || editingId) && (
       <form className="card card-body mb-4" onSubmit={save}>
         <div className="row g-2">
           <div className="col-md-4">
@@ -223,6 +232,7 @@ export default function Secrets() {
           {saveError && <div className="col-12 text-danger small">{saveError}</div>}
         </div>
       </form>
+      )}
 
       {isLoading ? <p>Loading…</p> : secrets.length === 0 ? (
         <p className="text-muted">No secrets tracked yet.</p>

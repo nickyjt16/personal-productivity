@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { useCapture, useDeleteInbox, useInbox, useInboxToTodo, useProcessInbox } from '../api/hooks'
+import { useCapture, useDeleteInbox, useInbox, useInboxToNote, useInboxToTodo, useProcessInbox } from '../api/hooks'
 
 export default function Inbox() {
   const { data: items = [], isLoading } = useInbox()
   const capture = useCapture()
   const process = useProcessInbox()
   const toTodo = useInboxToTodo()
+  const toNote = useInboxToNote()
   const remove = useDeleteInbox()
 
   const [text, setText] = useState('')
@@ -39,6 +40,8 @@ export default function Inbox() {
                 <>
                   <button className="btn btn-sm btn-outline-success"
                     title="Convert to todo" onClick={() => toTodo.mutate(i.id)}>→ Todo</button>
+                  <button className="btn btn-sm btn-outline-primary"
+                    title="Save as a note for long-term storage" onClick={() => toNote.mutate(i.id)}>→ Note</button>
                   <button className="btn btn-sm btn-outline-secondary"
                     title="Mark processed" onClick={() => process.mutate(i.id)}>Done</button>
                 </>

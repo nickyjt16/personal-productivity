@@ -84,6 +84,30 @@ public class InboxController(AppDbContext db) : ControllerBase
         return Ok(new { todoId = todo.Id });
     }
 
+    // Triage an inbox item into a note for long-term storage, marking it processed.
+    [HttpPost("{id:guid}/to-note")]
+    public async Task<IActionResult> ConvertToNote(Guid id, CancellationToken ct)
+    {
+        var item = await db.InboxItems.FindAsync([id], ct);
+        if (item is null) return NotFound();
+
+        var now = DateTimeOffset.UtcNow;
+        var note = new Note
+        {
+            Id = Guid.NewGuid(),
+            Body = item.Text,
+            CreatedAt = now,
+            UpdatedAt = now,
+        };
+        db.Notes.Add(note);
+
+        item.IsProcessed = true;
+        item.ProcessedAt = now;
+
+        await db.SaveChangesAsync(ct);
+        return Ok(new { noteId = note.Id });
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
     {

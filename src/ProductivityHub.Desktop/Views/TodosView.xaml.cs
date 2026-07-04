@@ -108,12 +108,25 @@ public partial class TodosView : UserControl
         await LoadAsync();
     }
 
+    private void ToggleAdd_Click(object sender, RoutedEventArgs e)
+    {
+        if (AddCard.Visibility == Visibility.Visible) ResetInput();
+        else ShowAddCard(true);
+    }
+
+    private void ShowAddCard(bool show)
+    {
+        AddCard.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        AddToggleBtn.Content = show ? "Close" : "＋ Add task";
+    }
+
     private void Edit_Click(object sender, RoutedEventArgs e)
     {
         var row = (TodoRow)((FrameworkElement)sender).DataContext;
         _editingId = row.Id;
         _pendingProjectIds = [];
         UpdatePickBtn();
+        ShowAddCard(true);
         TitleBox.Text = row.Title;
         NotesBox.Text = row.Notes ?? "";
         PriorityBox.SelectedItem = row.Priority.ToString();
@@ -137,6 +150,7 @@ public partial class TodosView : UserControl
         RepeatCombo.SelectedIndex = 0;
         AddBtn.Content = "Add";
         CancelBtn.Visibility = Visibility.Collapsed;
+        ShowAddCard(false);
     }
 
     private RecurUnit GetRepeatUnit()

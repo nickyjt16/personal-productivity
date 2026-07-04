@@ -10,12 +10,16 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,4">
-            <Button DockPanel.Dock="Right" Content="↻ Check for new links" Click="Import_Click" />
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                <Button Content="↻ Check for new links" Click="Import_Click" />
+                <Button x:Name="AddToggleBtn" Content="＋ Add bookmark" Style="{StaticResource AccentButton}"
+                        Click="ToggleAdd_Click" Margin="8,0,0,0" />
+            </StackPanel>
             <TextBlock Text="🔖 Bookmarks" Style="{StaticResource Heading}" Margin="0" />
         </DockPanel>
         <TextBlock Grid.Row="1" x:Name="Status" Style="{StaticResource Muted}" Margin="0,0,0,12" />
 
-        <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,12">
+        <Border x:Name="AddCard" Grid.Row="2" Style="{StaticResource Card}" Margin="0,0,0,12" Visibility="Collapsed">
             <StackPanel Orientation="Horizontal">
                 <TextBox x:Name="UrlBox" Width="320" Tag="https://…" />
                 <TextBox x:Name="TitleBox" Width="220" Margin="8,0,0,0" Tag="Title (optional)" />

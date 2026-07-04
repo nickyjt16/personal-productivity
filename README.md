@@ -36,10 +36,10 @@ There are **two versions of the app and they share the same data**, so you can u
   and, when you tick one off, instead of disappearing it rolls its due date forward to the next
   occurrence. Assign a task to one or more **projects** (see below).
 - **📥 Inbox** — a fast scratch space. Type a thought, press **Enter**, and it's saved. Later, triage
-  each item: turn it into a todo, mark it done, or delete it.
+  each item: turn it into a **todo**, save it as a **note** for long-term storage, mark it done, or delete it.
 - **🔖 Bookmarks** — save links to read later, mark them read/unread, and group them by project. Save
   pages straight from your browser with the extension (section 3), including smart LinkedIn-post capture.
-- **📝 Notes** — a simple notepad; notes can belong to projects.
+- **📝 Notes** — a simple notepad; notes can belong to projects and can be **filtered by project**.
 - **📔 Journal** — one dated entry per day.
 - **📁 Projects** — a project groups related **todos, notes, bookmarks and secrets**. Give it a colour
   and a status (Active/Complete/Archived). Every list has a **project filter** to focus on one project,
@@ -52,6 +52,10 @@ There are **two versions of the app and they share the same data**, so you can u
   you work in other apps.
 - **🔎 Search** — type in the search box and press **Enter** to search across everything.
 - **🌙 Dark mode** and one-click **backup / restore** live in **Settings**.
+- **🏠 Dashboard** — the count cards (open tasks, to triage, unread links) are **clickable** and jump
+  straight to that section.
+- Each section leads with its **list**; a **＋ Add** button opens the entry form when you need it, so
+  the list stays front and centre.
 
 ### Desktop-only extras
 
