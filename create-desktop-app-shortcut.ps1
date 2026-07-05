@@ -13,6 +13,12 @@ if (-not (Test-Path $exe)) {
     exit 1
 }
 
+# If the exe was downloaded (e.g. from a GitHub Release), Windows tags it with a
+# "Mark of the Web", which makes SmartScreen show a "Windows protected your PC"
+# warning. Unblock it so the app launches without that prompt.
+Unblock-File -Path $exe -ErrorAction SilentlyContinue
+Write-Host "Unblocked the app (clears the 'downloaded from the internet' flag)."
+
 $desktop = [Environment]::GetFolderPath('Desktop')
 $shortcut = Join-Path $desktop 'Productivity Hub.lnk'
 

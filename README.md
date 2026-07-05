@@ -120,12 +120,31 @@ src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish\Productiv
 
 **Double-click `ProductivityHub.Desktop.exe`.** That's it — the app opens in a window, no server, no
 browser. (Optional: run `powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1`
-to put a shortcut on your Desktop. If Windows shows a blue "Windows protected your PC" box the first
-time, click **More info → Run anyway** — that appears because the app isn't code-signed.)
+to put a shortcut on your Desktop — the script also unblocks the app for you, see below.)
 
 > **Tip for sharing with someone who isn't technical:** add `--self-contained true` to the Step 3
 > command. That makes a bigger file that includes everything, so they can just double-click it
 > **without installing .NET first**.
+
+### About the "Windows protected your PC" warning
+
+Because the app isn't code-signed, Windows **SmartScreen** may show a blue *"Windows protected your PC"*
+box, and it reappears for each **new version you download**. It's expected — the app is safe, just
+unsigned. To get past it (any one of these):
+
+- Click **More info → Run anyway** (one-time, per file).
+- **Build it yourself** (Step 3 above) rather than downloading a release — a file you compile has no
+  "downloaded from the internet" flag, so there's no warning at all.
+- If you downloaded the release `.exe`, **unblock it once**: right-click it → **Properties** → tick
+  **Unblock** → OK, or run:
+  ```powershell
+  Unblock-File "C:\path\to\ProductivityHub.exe"
+  ```
+  The `create-desktop-app-shortcut.ps1` script does this automatically.
+
+The downloadable release `.exe` is **framework-dependent** (it needs the .NET Desktop Runtime from
+Step 1). That keeps it small and makes antivirus false positives far less likely than a large
+all-in-one build.
 
 ---
 
