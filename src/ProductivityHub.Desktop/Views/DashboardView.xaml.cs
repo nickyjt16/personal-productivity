@@ -22,6 +22,8 @@ public partial class DashboardView : UserControl
         OpenCount.Text = openTodos.Count.ToString();
         InboxCount.Text = (await db.InboxItems.CountAsync(i => !i.IsProcessed)).ToString();
         UnreadCount.Text = (await db.Bookmarks.CountAsync(b => !b.IsRead)).ToString();
+        var secretCutoff = DateOnly.FromDateTime(DateTime.Today.AddDays(7));
+        ExpiringCount.Text = (await db.Secrets.CountAsync(s => s.ExpiresOn <= secretCutoff)).ToString();
 
         var rows = openTodos.Take(8).Select(t => new TodoRow
         {

@@ -20,11 +20,18 @@
                         <TextBlock Text="To triage" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Width="150" Cursor="Hand"
+                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0" Cursor="Hand"
                         Tag="bookmarks" MouseLeftButtonUp="Card_Click" ToolTip="Go to Bookmarks">
                     <StackPanel>
                         <TextBlock x:Name="UnreadCount" FontSize="26" FontWeight="Bold" />
                         <TextBlock Text="Unread links" Style="{StaticResource Muted}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Card}" Width="150" Cursor="Hand"
+                        Tag="secrets" MouseLeftButtonUp="Card_Click" ToolTip="Go to Secrets">
+                    <StackPanel>
+                        <TextBlock x:Name="ExpiringCount" FontSize="26" FontWeight="Bold" />
+                        <TextBlock Text="Secrets expiring (7d)" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
             </StackPanel>

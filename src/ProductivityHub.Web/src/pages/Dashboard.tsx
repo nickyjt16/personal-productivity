@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useBookmarks, useInbox, useJournalEntry, useTodos, useToggleTodo } from '../api/hooks'
+import { useBookmarks, useExpiringSecrets, useInbox, useJournalEntry, useTodos, useToggleTodo } from '../api/hooks'
 import PomodoroTimer from '../components/PomodoroTimer'
 import { useSettings } from '../settings'
 import { dueBadge, dueStatus } from '../util/due'
@@ -14,6 +14,7 @@ export default function Dashboard() {
   const { data: openTodos = [] } = useTodos(false)
   const { data: unprocessed = [] } = useInbox(false)
   const { data: unread = [] } = useBookmarks(false)
+  const { data: expiringSecrets = [] } = useExpiringSecrets()
   const { data: journal } = useJournalEntry(today())
 
   const greeting = new Date().getHours() < 12 ? 'Good morning' :
@@ -30,6 +31,7 @@ export default function Dashboard() {
         {isVisible('todos') && <StatCard to="/todos" label="Open tasks" value={openTodos.length} icon="✅" />}
         {isVisible('inbox') && <StatCard to="/inbox" label="To triage" value={unprocessed.length} icon="📥" />}
         {isVisible('bookmarks') && <StatCard to="/bookmarks" label="Unread links" value={unread.length} icon="🔖" />}
+        {isVisible('secrets') && <StatCard to="/secrets" label="Secrets expiring (7d)" value={expiringSecrets.length} icon="🔑" />}
         {isVisible('journal') && <StatCard to="/journal" label="Journal today" value={journal ? '✓' : '—'} icon="📔" />}
       </div>
 
