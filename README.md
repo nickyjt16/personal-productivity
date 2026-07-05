@@ -52,8 +52,8 @@ There are **two versions of the app and they share the same data**, so you can u
   you work in other apps.
 - **🔎 Search** — type in the search box and press **Enter** to search across everything.
 - **🌙 Dark mode** and one-click **backup / restore** live in **Settings**.
-- **🏠 Dashboard** — the count cards (open tasks, to triage, unread links) are **clickable** and jump
-  straight to that section.
+- **🏠 Dashboard** — count cards for open tasks, items to triage, unread links, **secrets expiring in
+  the next 7 days**, and today's journal. Each card is **clickable** and jumps straight to that section.
 - Each section leads with its **list**; a **＋ Add** button opens the entry form when you need it, so
   the list stays front and centre.
 
