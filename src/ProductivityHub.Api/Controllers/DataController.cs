@@ -27,7 +27,9 @@ public class DataController(AppDbContext db) : ControllerBase
             NoteProjects: await db.NoteProjects.AsNoTracking().ToListAsync(ct),
             BookmarkProjects: await db.BookmarkProjects.AsNoTracking().ToListAsync(ct),
             Secrets: await db.Secrets.AsNoTracking().ToListAsync(ct),
-            SecretProjects: await db.SecretProjects.AsNoTracking().ToListAsync(ct));
+            SecretProjects: await db.SecretProjects.AsNoTracking().ToListAsync(ct),
+            Environments: await db.Environments.AsNoTracking().ToListAsync(ct),
+            EnvironmentConfigs: await db.EnvironmentConfigs.AsNoTracking().ToListAsync(ct));
         return Ok(backup);
     }
 
@@ -49,12 +51,16 @@ public class DataController(AppDbContext db) : ControllerBase
         await db.Notes.ExecuteDeleteAsync(ct);
         await db.JournalEntries.ExecuteDeleteAsync(ct);
         await db.SecretProjects.ExecuteDeleteAsync(ct);
+        await db.EnvironmentConfigs.ExecuteDeleteAsync(ct);
+        await db.Environments.ExecuteDeleteAsync(ct);
         await db.Projects.ExecuteDeleteAsync(ct);
         await db.Secrets.ExecuteDeleteAsync(ct);
 
         db.Projects.AddRange(data.Projects ?? []);
         db.Secrets.AddRange(data.Secrets ?? []);
         db.SecretProjects.AddRange(data.SecretProjects ?? []);
+        db.Environments.AddRange(data.Environments ?? []);
+        db.EnvironmentConfigs.AddRange(data.EnvironmentConfigs ?? []);
         db.Todos.AddRange(data.Todos ?? []);
         db.Notes.AddRange(data.Notes ?? []);
         db.Bookmarks.AddRange(data.Bookmarks ?? []);
@@ -87,8 +93,10 @@ public class DataController(AppDbContext db) : ControllerBase
         await db.NoteProjects.ExecuteDeleteAsync(ct);
         await db.BookmarkProjects.ExecuteDeleteAsync(ct);
         await db.SecretProjects.ExecuteDeleteAsync(ct);
+        await db.EnvironmentConfigs.ExecuteDeleteAsync(ct);
         await db.PomodoroSessions.ExecuteDeleteAsync(ct);
 
+        await db.Environments.ExecuteDeleteAsync(ct);
         await db.Todos.ExecuteDeleteAsync(ct);
         await db.InboxItems.ExecuteDeleteAsync(ct);
         await db.Bookmarks.ExecuteDeleteAsync(ct);

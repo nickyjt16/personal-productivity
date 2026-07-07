@@ -82,6 +82,32 @@ public static class SchemaUpdater
                 "Hint" TEXT NULL,
                 "CreatedAt" INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS "Environments" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_Environments" PRIMARY KEY,
+                "Name" TEXT NOT NULL,
+                "Type" INTEGER NOT NULL,
+                "PpEnvironmentId" TEXT NULL,
+                "Url" TEXT NULL,
+                "TenantId" TEXT NULL,
+                "Region" TEXT NULL,
+                "Notes" TEXT NULL,
+                "CreatedAt" INTEGER NOT NULL,
+                "UpdatedAt" INTEGER NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS "EnvironmentConfigs" (
+                "Id" TEXT NOT NULL CONSTRAINT "PK_EnvironmentConfigs" PRIMARY KEY,
+                "EnvironmentId" TEXT NOT NULL,
+                "Kind" INTEGER NOT NULL,
+                "Name" TEXT NOT NULL,
+                "Value" TEXT NULL,
+                "Solution" TEXT NULL,
+                "IsSet" INTEGER NOT NULL,
+                "Notes" TEXT NULL,
+                CONSTRAINT "FK_EnvironmentConfigs_Environments_EnvironmentId" FOREIGN KEY ("EnvironmentId") REFERENCES "Environments" ("Id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "IX_EnvironmentConfigs_EnvironmentId" ON "EnvironmentConfigs" ("EnvironmentId");
             """;
 
         await db.Database.ExecuteSqlRawAsync(sql, ct);

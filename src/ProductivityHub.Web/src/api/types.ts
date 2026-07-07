@@ -97,6 +97,31 @@ export interface VaultStatus {
   hint: string | null
 }
 
+export type EnvironmentType = 'Dev' | 'Test' | 'UAT' | 'Prod' | 'Default' | 'Sandbox' | 'Other'
+export type EnvConfigKind = 'ConnectionReference' | 'EnvironmentVariable'
+
+export interface EnvConfig {
+  id: string
+  kind: EnvConfigKind
+  name: string
+  value: string | null
+  solution: string | null
+  isSet: boolean
+  notes: string | null
+}
+
+export interface Environment {
+  id: string
+  name: string
+  type: EnvironmentType
+  ppEnvironmentId: string | null
+  url: string | null
+  tenantId: string | null
+  region: string | null
+  notes: string | null
+  configs: EnvConfig[]
+}
+
 export interface PomodoroSession {
   id: string
   todoItemId: string | null

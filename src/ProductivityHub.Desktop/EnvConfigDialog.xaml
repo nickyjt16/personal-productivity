@@ -1,0 +1,60 @@
+<Window x:Class="ProductivityHub.Desktop.EnvConfigDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Setup checklist" Height="520" Width="620"
+        Background="{DynamicResource BgBrush}" WindowStartupLocation="CenterOwner">
+    <DockPanel Margin="16">
+        <TextBlock x:Name="HeaderText" DockPanel.Dock="Top" Style="{StaticResource Heading}" />
+        <TextBlock DockPanel.Dock="Top" Style="{StaticResource Muted}" Margin="0,0,0,10"
+                   Text="Connection references &amp; environment variables to set in this environment after import. Tick each once set." />
+
+        <Border DockPanel.Dock="Bottom" Style="{StaticResource Card}" Margin="0,10,0,0">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <ComboBox x:Name="KindBox" Width="150">
+                        <ComboBoxItem Content="Connection ref" Tag="ConnectionReference" IsSelected="True" />
+                        <ComboBoxItem Content="Env variable" Tag="EnvironmentVariable" />
+                    </ComboBox>
+                    <TextBox x:Name="NameBox" Width="200" Margin="8,0,0,0" Tag="Logical / display name" />
+                    <TextBox x:Name="SolutionBox" Width="160" Margin="8,0,0,0" Tag="Solution (optional)" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <TextBox x:Name="ValueBox" Width="368" Tag="Value to set (optional)" />
+                    <Button Content="Add" Style="{StaticResource AccentButton}" Click="Add_Click" Margin="8,0,0,0" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,4,0,0">
+            <StackPanel>
+                <TextBlock x:Name="EmptyText" Text="No items yet — add the first one below." Style="{StaticResource Muted}"
+                           Visibility="Collapsed" />
+                <ItemsControl x:Name="ItemsHost">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource Card}" Margin="0,0,0,6" Padding="10,6">
+                                <DockPanel>
+                                    <CheckBox DockPanel.Dock="Left" IsChecked="{Binding IsSet, Mode=OneWay}"
+                                              Click="Toggle_Click" VerticalAlignment="Center" Margin="0,0,8,0" ToolTip="Set in this environment" />
+                                    <Button DockPanel.Dock="Right" Content="✕" Click="Delete_Click" Padding="7,3" VerticalAlignment="Center" />
+                                    <Border DockPanel.Dock="Left" Background="{Binding KindBrush}" CornerRadius="8" Padding="6,1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding KindText}" Foreground="White" FontSize="11" />
+                                    </Border>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" FontFamily="Consolas" />
+                                            <TextBlock Text="{Binding Solution}" Style="{StaticResource Muted}" Margin="8,0,0,0"
+                                                       Visibility="{Binding HasSolution, Converter={StaticResource BoolToVis}}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding ValueText}" Style="{StaticResource Muted}"
+                                                   Visibility="{Binding HasValue, Converter={StaticResource BoolToVis}}" />
+                                    </StackPanel>
+                                </DockPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</Window>

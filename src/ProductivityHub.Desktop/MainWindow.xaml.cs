@@ -21,6 +21,7 @@ public partial class MainWindow : Window
         new("journal", "📔  Journal"),
         new("projects", "📁  Projects"),
         new("secrets", "🔑  Secrets"),
+        new("environments", "🌐  Environments"),
         new("pomodoro", "🍅  Pomodoro"),
     };
 
@@ -79,6 +80,7 @@ public partial class MainWindow : Window
         "journal" => new JournalView(),
         "projects" => new ProjectsView(),
         "secrets" => new SecretsView(),
+        "environments" => new EnvironmentsView(),
         "pomodoro" => new PomodoroView(),
         _ => new DashboardView(),
     };

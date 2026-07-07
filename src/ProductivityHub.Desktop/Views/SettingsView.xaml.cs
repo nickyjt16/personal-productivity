@@ -15,7 +15,7 @@ public partial class SettingsView : UserControl
     {
         ("todos", "✅  Todos"), ("inbox", "📥  Inbox"), ("bookmarks", "🔖  Bookmarks"),
         ("notes", "📝  Notes"), ("journal", "📔  Journal"), ("projects", "📁  Projects"),
-        ("secrets", "🔑  Secrets"), ("pomodoro", "🍅  Pomodoro"),
+        ("secrets", "🔑  Secrets"), ("environments", "🌐  Environments"), ("pomodoro", "🍅  Pomodoro"),
     };
 
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -123,7 +123,10 @@ public partial class SettingsView : UserControl
             await db.TodoProjects.AsNoTracking().ToListAsync(),
             await db.NoteProjects.AsNoTracking().ToListAsync(),
             await db.BookmarkProjects.AsNoTracking().ToListAsync(),
-            await db.Secrets.AsNoTracking().ToListAsync());
+            await db.Secrets.AsNoTracking().ToListAsync(),
+            SecretProjects: await db.SecretProjects.AsNoTracking().ToListAsync(),
+            Environments: await db.Environments.AsNoTracking().ToListAsync(),
+            EnvironmentConfigs: await db.EnvironmentConfigs.AsNoTracking().ToListAsync());
 
         await File.WriteAllTextAsync(dlg.FileName, JsonSerializer.Serialize(backup, Json));
         ShowStatus("Backup exported.");
@@ -153,11 +156,17 @@ public partial class SettingsView : UserControl
             await db.Bookmarks.ExecuteDeleteAsync();
             await db.Notes.ExecuteDeleteAsync();
             await db.JournalEntries.ExecuteDeleteAsync();
+            await db.SecretProjects.ExecuteDeleteAsync();
+            await db.EnvironmentConfigs.ExecuteDeleteAsync();
+            await db.Environments.ExecuteDeleteAsync();
             await db.Projects.ExecuteDeleteAsync();
             await db.Secrets.ExecuteDeleteAsync();
 
             db.Projects.AddRange(backup.Projects ?? []);
             db.Secrets.AddRange(backup.Secrets ?? []);
+            db.SecretProjects.AddRange(backup.SecretProjects ?? []);
+            db.Environments.AddRange(backup.Environments ?? []);
+            db.EnvironmentConfigs.AddRange(backup.EnvironmentConfigs ?? []);
             db.Todos.AddRange(backup.Todos ?? []);
             db.Notes.AddRange(backup.Notes ?? []);
             db.Bookmarks.AddRange(backup.Bookmarks ?? []);
@@ -182,7 +191,10 @@ public partial class SettingsView : UserControl
         await db.TodoProjects.ExecuteDeleteAsync();
         await db.NoteProjects.ExecuteDeleteAsync();
         await db.BookmarkProjects.ExecuteDeleteAsync();
+        await db.SecretProjects.ExecuteDeleteAsync();
+        await db.EnvironmentConfigs.ExecuteDeleteAsync();
         await db.PomodoroSessions.ExecuteDeleteAsync();
+        await db.Environments.ExecuteDeleteAsync();
         await db.Todos.ExecuteDeleteAsync();
         await db.InboxItems.ExecuteDeleteAsync();
         await db.Bookmarks.ExecuteDeleteAsync();

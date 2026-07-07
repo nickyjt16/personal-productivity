@@ -15,6 +15,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Secret> Secrets => Set<Secret>();
     public DbSet<VaultConfig> VaultConfig => Set<VaultConfig>();
+    public DbSet<PowerPlatformEnvironment> Environments => Set<PowerPlatformEnvironment>();
+    public DbSet<EnvironmentConfig> EnvironmentConfigs => Set<EnvironmentConfig>();
     public DbSet<TodoProject> TodoProjects => Set<TodoProject>();
     public DbSet<NoteProject> NoteProjects => Set<NoteProject>();
     public DbSet<BookmarkProject> BookmarkProjects => Set<BookmarkProject>();
@@ -87,5 +89,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasOne(x => x.Project).WithMany()
                 .HasForeignKey(x => x.ProjectId).OnDelete(DeleteBehavior.Cascade);
         });
+
+        // An environment's config rows are deleted with the environment.
+        modelBuilder.Entity<EnvironmentConfig>()
+            .HasOne(c => c.Environment).WithMany(e => e.Configs)
+            .HasForeignKey(c => c.EnvironmentId).OnDelete(DeleteBehavior.Cascade);
     }
 }

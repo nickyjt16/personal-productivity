@@ -14,6 +14,10 @@ import type {
   Secret,
   Todo,
   VaultStatus,
+  Environment,
+  EnvConfig,
+  EnvConfigKind,
+  EnvironmentType,
 } from './types'
 
 // Build a query string from defined params only.
@@ -355,6 +359,48 @@ export function useUnlockVault() {
 
 export function useLockVault() {
   return useVaultMutation(() => api.post('/api/vault/lock'))
+}
+
+// ---------- Environments ----------
+type EnvBody = {
+  name: string; type: EnvironmentType; ppEnvironmentId?: string
+  url?: string; tenantId?: string; region?: string; notes?: string
+}
+type ConfigBody = { kind: EnvConfigKind; name: string; value?: string; solution?: string; notes?: string }
+
+export function useEnvironments() {
+  return useQuery({ queryKey: ['environments'], queryFn: () => api.get<Environment[]>('/api/environments') })
+}
+
+function useEnvMutation<TArgs>(fn: (args: TArgs) => Promise<unknown>) {
+  const qc = useQueryClient()
+  return useMutation({ mutationFn: fn, onSuccess: () => qc.invalidateQueries({ queryKey: ['environments'] }) })
+}
+
+export function useCreateEnvironment() {
+  return useEnvMutation((body: EnvBody) => api.post<Environment>('/api/environments', body))
+}
+export function useUpdateEnvironment() {
+  return useEnvMutation(({ id, ...body }: EnvBody & { id: string }) => api.put<Environment>(`/api/environments/${id}`, body))
+}
+export function useDeleteEnvironment() {
+  return useEnvMutation((id: string) => api.del(`/api/environments/${id}`))
+}
+export function useAddEnvConfig() {
+  return useEnvMutation(({ envId, ...body }: ConfigBody & { envId: string }) =>
+    api.post<EnvConfig>(`/api/environments/${envId}/configs`, body))
+}
+export function useUpdateEnvConfig() {
+  return useEnvMutation(({ envId, configId, ...body }: ConfigBody & { envId: string; configId: string }) =>
+    api.put<EnvConfig>(`/api/environments/${envId}/configs/${configId}`, body))
+}
+export function useToggleEnvConfig() {
+  return useEnvMutation(({ envId, configId }: { envId: string; configId: string }) =>
+    api.post<EnvConfig>(`/api/environments/${envId}/configs/${configId}/toggle`))
+}
+export function useDeleteEnvConfig() {
+  return useEnvMutation(({ envId, configId }: { envId: string; configId: string }) =>
+    api.del(`/api/environments/${envId}/configs/${configId}`))
 }
 
 // ---------- Search ----------

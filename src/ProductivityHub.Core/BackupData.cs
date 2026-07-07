@@ -18,4 +18,6 @@ public record BackupData(
     List<NoteProject> NoteProjects,
     List<BookmarkProject> BookmarkProjects,
     List<Secret>? Secrets = null,
-    List<SecretProject>? SecretProjects = null);
+    List<SecretProject>? SecretProjects = null,
+    List<PowerPlatformEnvironment>? Environments = null,
+    List<EnvironmentConfig>? EnvironmentConfigs = null);

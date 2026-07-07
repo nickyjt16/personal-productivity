@@ -24,6 +24,16 @@ public static class Palette
         _ => FromHex("#6C757D"),
     };
 
+    public static Brush EnvType(EnvironmentType t) => t switch
+    {
+        EnvironmentType.Prod => FromHex("#DC3545"),
+        EnvironmentType.UAT => FromHex("#FD7E14"),
+        EnvironmentType.Test => FromHex("#0DCAF0"),
+        EnvironmentType.Default => FromHex("#0D6EFD"),
+        EnvironmentType.Sandbox => FromHex("#198754"),
+        _ => FromHex("#6C757D"),
+    };
+
     public static Brush Status(ProjectStatus s) => s switch
     {
         ProjectStatus.Active => FromHex("#0D6EFD"),
@@ -125,6 +135,57 @@ public class ComboItem
     public Guid? Id { get; init; }
     public required string Label { get; init; }
     public override string ToString() => Label;
+}
+
+// Display wrapper for a Power Platform environment.
+public class EnvRow
+{
+    public required Guid Id { get; init; }
+    public required string Name { get; init; }
+    public required EnvironmentType Type { get; init; }
+    public string TypeText => Type.ToString();
+    public Brush TypeBrush => Palette.EnvType(Type);
+    public string? Region { get; init; }
+    public bool HasRegion => !string.IsNullOrWhiteSpace(Region);
+    public string? PpEnvironmentId { get; init; }
+    public bool HasEnvId => !string.IsNullOrWhiteSpace(PpEnvironmentId);
+    public string? Url { get; init; }
+    public bool HasUrl => !string.IsNullOrWhiteSpace(Url);
+    public string? TenantId { get; init; }
+    public bool HasTenant => !string.IsNullOrWhiteSpace(TenantId);
+    public string? Notes { get; init; }
+    public bool HasNotes => !string.IsNullOrWhiteSpace(Notes);
+
+    // Quick-launch links derived from the stored IDs/URL.
+    public string? MakerUrl => HasEnvId ? $"https://make.powerapps.com/environments/{PpEnvironmentId}/home" : null;
+    public string? AdminUrl => HasEnvId ? $"https://admin.powerplatform.microsoft.com/environments/{PpEnvironmentId}/hub" : null;
+    public string? DataverseApi => HasUrl ? $"{Url!.TrimEnd('/')}/api/data/v9.2/" : null;
+    public bool HasMaker => HasEnvId;
+    public bool HasDataverse => HasUrl;
+
+    public int ConfigTotal { get; init; }
+    public int ConfigSet { get; init; }
+    public bool HasConfigs => ConfigTotal > 0;
+    public string ConfigSummary => ConfigTotal == 0
+        ? "Setup checklist: none yet"
+        : $"Setup checklist: {ConfigSet} of {ConfigTotal} set";
+}
+
+// Display wrapper for an environment config row (connection ref / env variable).
+public class EnvConfigRow
+{
+    public required Guid Id { get; init; }
+    public required EnvConfigKind Kind { get; init; }
+    public string KindText => Kind == EnvConfigKind.ConnectionReference ? "CR" : "EV";
+    public Brush KindBrush => Kind == EnvConfigKind.ConnectionReference
+        ? Palette.FromHex("#0DCAF0") : Palette.FromHex("#6C757D");
+    public required string Name { get; init; }
+    public string? Value { get; init; }
+    public bool HasValue => !string.IsNullOrWhiteSpace(Value);
+    public string ValueText => "→ " + Value;
+    public string? Solution { get; init; }
+    public bool HasSolution => !string.IsNullOrWhiteSpace(Solution);
+    public bool IsSet { get; set; }
 }
 
 public class SecretRow

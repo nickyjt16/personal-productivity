@@ -9,6 +9,7 @@ import Notes from './pages/Notes'
 import Journal from './pages/Journal'
 import Projects from './pages/Projects'
 import Secrets from './pages/Secrets'
+import Environments from './pages/Environments'
 import Search from './pages/Search'
 import Settings from './pages/Settings'
 import { SECTIONS, useSettings } from './settings'
@@ -46,6 +47,7 @@ export default function App() {
             <Route path="/journal" element={<Journal />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/secrets" element={<Secrets />} />
+            <Route path="/environments" element={<Environments />} />
             <Route path="/search" element={<Search />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>

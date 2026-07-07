@@ -108,6 +108,37 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Environment_crud_and_config_checklist()
+    {
+        var env = await (await _client.PostAsJsonAsync("/api/environments",
+            new { name = "Contoso Dev", type = "Dev", ppEnvironmentId = "11111111-1111-1111-1111-111111111111", url = "https://contoso.crm11.dynamics.com" }))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        var eid = Id(env);
+        Assert.Equal("Contoso Dev", env.GetProperty("name").GetString());
+        Assert.Equal("Dev", env.GetProperty("type").GetString());
+
+        // Add a connection-reference config row, then toggle it "set".
+        var cfg = await (await _client.PostAsJsonAsync($"/api/environments/{eid}/configs",
+            new { kind = "ConnectionReference", name = "cr_sharepoint", value = "SharePoint - svc account" }))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        var cid = Id(cfg);
+        Assert.False(cfg.GetProperty("isSet").GetBoolean());
+
+        var toggled = await (await _client.PostAsync($"/api/environments/{eid}/configs/{cid}/toggle", null))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        Assert.True(toggled.GetProperty("isSet").GetBoolean());
+
+        var list = await GetArray("/api/environments");
+        Assert.Equal(1, list.GetArrayLength());
+        Assert.Equal(1, list[0].GetProperty("configs").GetArrayLength());
+        Assert.Equal("cr_sharepoint", list[0].GetProperty("configs")[0].GetProperty("name").GetString());
+
+        // Deleting the environment cascades to its config rows.
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.DeleteAsync($"/api/environments/{eid}")).StatusCode);
+        Assert.Equal(0, (await GetArray("/api/environments")).GetArrayLength());
+    }
+
+    [Fact]
     public async Task Clear_all_empties_every_section()
     {
         await _client.PostAsJsonAsync("/api/todos", new { title = "x" });

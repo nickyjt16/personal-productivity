@@ -16,7 +16,15 @@ There are **two front-ends that share the same database**:
 2. **Web app** (React SPA) — served by the ASP.NET Core API.
 
 Feature areas: Todos (with priority, due dates, and daily/weekly/monthly recurrence), Inbox, Bookmarks,
-Notes, Journal, Projects, Secrets (expiry tracking), Pomodoro, plus Search, dark mode, and backup/restore.
+Notes, Journal, Projects, Secrets (expiry tracking + optional master-password encryption), Environments
+(Power Platform env reference + per-env connection-reference/environment-variable checklist), Pomodoro,
+plus Search, dark mode, and backup/restore.
+
+Environments model: `PowerPlatformEnvironment` + child `EnvironmentConfig` (Kind = ConnectionReference |
+EnvironmentVariable) in Core; `EnvironmentsController` (nested config endpoints) in the API; a list-first
+page (web) and an `EnvironmentsView` + `EnvConfigDialog` (desktop). Quick-launch links are derived in the
+UI from the stored IDs/URL — nothing is fetched live. Environments + configs are included in
+backup/import/clear (BackupData + DataController + desktop SettingsView).
 
 ## Solution layout
 

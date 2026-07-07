@@ -110,6 +110,56 @@ public class Secret
     [JsonIgnore] public List<SecretProject> ProjectLinks { get; set; } = [];
 }
 
+public enum EnvironmentType
+{
+    Dev,
+    Test,
+    UAT,
+    Prod,
+    Default,
+    Sandbox,
+    Other
+}
+
+// A Power Platform / Dataverse environment's reference details.
+public class PowerPlatformEnvironment
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = "";
+    public EnvironmentType Type { get; set; } = EnvironmentType.Dev;
+    // The Power Platform environment ID (GUID), as shown in the admin centre.
+    public string? PpEnvironmentId { get; set; }
+    // The org / environment URL, e.g. https://contoso.crm11.dynamics.com
+    public string? Url { get; set; }
+    public string? TenantId { get; set; }
+    public string? Region { get; set; }
+    public string? Notes { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
+    public List<EnvironmentConfig> Configs { get; set; } = [];
+}
+
+public enum EnvConfigKind
+{
+    ConnectionReference,
+    EnvironmentVariable
+}
+
+// A value to set in a specific environment after importing a solution —
+// a connection reference's connection or an environment variable's value.
+public class EnvironmentConfig
+{
+    public Guid Id { get; set; }
+    public Guid EnvironmentId { get; set; }
+    [JsonIgnore] public PowerPlatformEnvironment? Environment { get; set; }
+    public EnvConfigKind Kind { get; set; }
+    public string Name { get; set; } = "";
+    public string? Value { get; set; }
+    public string? Solution { get; set; }
+    public bool IsSet { get; set; }
+    public string? Notes { get; set; }
+}
+
 // Single-row table holding the master-password vault parameters. The password
 // itself is never stored — only the PBKDF2 salt/iterations and a verifier token
 // (a known string encrypted with the derived key) used to check the password.
