@@ -1,7 +1,14 @@
 # Creates a Desktop shortcut to the published WPF desktop app.
-# Publish first (self-contained so it launches without depending on an installed
-# .NET Desktop Runtime — the most reliable option for a local double-click):
-#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+#
+# Publish as a normal MULTI-FILE build (NOT single-file). Single-file bundles
+# extract native executables to a temp folder at runtime, which corporate
+# Microsoft Defender ASR rules (e.g. "block untrusted/low-prevalence
+# executables") flag repeatedly — causing "blocked by your IT administrator"
+# prompts every few minutes. A multi-file build loads its DLLs in place, so
+# nothing executable is written to temp:
+#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false
+# (needs the .NET Desktop Runtime 9 installed; add --self-contained true for a
+#  runtime-free build — still multi-file, just larger.)
 # Then run:
 #   powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1
 

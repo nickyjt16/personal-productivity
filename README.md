@@ -114,13 +114,14 @@ Click the green **Code** button on the GitHub page → **Download ZIP**, then un
 Open **PowerShell**, go to the project folder, and run this one line:
 
 ```powershell
-dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false
 ```
 
-This builds a **self-contained** app (~160 MB) that bundles everything it needs, so it launches by
-double-click without depending on any installed .NET runtime — the most reliable option. *(If you'd
-rather have a small ~7 MB download and you have the **.NET Desktop Runtime 9** installed, swap
-`--self-contained true` for `--self-contained false`.)*
+This is a **multi-file** build (a folder of DLLs next to the exe). Avoid `-p:PublishSingleFile=true`
+on **corporate/managed PCs** — single-file bundles extract executables to a temp folder at runtime,
+which Microsoft Defender **Attack Surface Reduction** rules often block repeatedly (see the note
+below). It needs the **.NET Desktop Runtime 9** (Step 1); add `--self-contained true` for a
+runtime-free build (still multi-file, just larger).
 
 When it finishes, it prints where it put the app. The program is here:
 
@@ -157,6 +158,22 @@ unsigned. To get past it (any one of these):
 The downloadable release `.exe` is **framework-dependent** (it needs the .NET Desktop Runtime from
 Step 1). That keeps it small and makes antivirus false positives far less likely than a large
 all-in-one build.
+
+### "Blocked by your IT administrator" (corporate / managed PCs)
+
+On a work machine you may see Defender pop *"…blocked an operation that is not allowed by your IT
+administrator"* — sometimes repeatedly while the app runs. That's a **Microsoft Defender Attack
+Surface Reduction (ASR)** rule, **`01443614-cd74-433a-b99e-2ecdc07bfc25`** ("Block executable files
+from running unless they meet a prevalence, age, or trusted-list criterion"). Because this app is
+unsigned and freshly built, it fails those criteria.
+
+- **Build multi-file, not single-file** (as in Step 3). Single-file builds extract executables to a
+  temp folder at runtime, and each fresh file re-trips the rule — that's what causes the *repeated*
+  prompts. Multi-file loads its DLLs in place, so the runtime nagging stops.
+- **Permanent fix (needs IT):** ask IT to add an **ASR exclusion** for the app folder
+  (`…\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish`), or to **code-sign** the
+  build. You can quote the rule ID above and the Defender event (ID **1121** in
+  *Microsoft-Windows-Windows Defender/Operational*) when you raise it.
 
 ---
 
