@@ -17,7 +17,7 @@ public class SecretsController(AppDbContext db, VaultSession vault) : Controller
     // but the vault must be unlocked to reveal it.
     public record SecretDto(Guid Id, string Name, string? ClientId, string? Value,
         DateOnly ExpiresOn, string? Notes, List<string> Notify, string? Link,
-        List<ProjectRef> Projects, int DaysLeft, bool HasValue, bool Locked);
+        List<ProjectRef> Projects, List<EnvRef> Environments, int DaysLeft, bool HasValue, bool Locked);
 
     public record SaveSecretRequest(string Name, string? ClientId, string? Value, DateOnly ExpiresOn,
         string? Notes, List<string>? Notify, string? Link);
@@ -35,6 +35,7 @@ public class SecretsController(AppDbContext db, VaultSession vault) : Controller
         }
         return new(s.Id, s.Name, s.ClientId, value, s.ExpiresOn, s.Notes, SplitNotify(s.NotifyList), s.Link,
             s.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList(),
+            s.EnvironmentLinks.Select(l => l.Environment!).Select(v => new EnvRef(v.Id, v.Name, v.Type)).ToList(),
             s.ExpiresOn.DayNumber - DateOnly.FromDateTime(DateTime.Today).DayNumber, hasValue, locked);
     }
 
@@ -64,7 +65,10 @@ public class SecretsController(AppDbContext db, VaultSession vault) : Controller
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] Guid? projectId, CancellationToken ct)
     {
-        var query = db.Secrets.Include(s => s.ProjectLinks).ThenInclude(l => l.Project).AsQueryable();
+        var query = db.Secrets
+            .Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+            .Include(s => s.EnvironmentLinks).ThenInclude(l => l.Environment)
+            .AsQueryable();
         if (projectId is not null)
             query = query.Where(s => s.ProjectLinks.Any(l => l.ProjectId == projectId));
         var items = await query.OrderBy(s => s.ExpiresOn).ToListAsync(ct);
@@ -76,7 +80,9 @@ public class SecretsController(AppDbContext db, VaultSession vault) : Controller
     public async Task<IActionResult> Expiring(CancellationToken ct)
     {
         var cutoff = DateOnly.FromDateTime(DateTime.Today.AddDays(7));
-        var items = await db.Secrets.Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+        var items = await db.Secrets
+            .Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+            .Include(s => s.EnvironmentLinks).ThenInclude(l => l.Environment)
             .Where(s => s.ExpiresOn <= cutoff)
             .OrderBy(s => s.ExpiresOn).ToListAsync(ct);
         return Ok(items.Select(ToDto));
@@ -150,6 +156,26 @@ public class SecretsController(AppDbContext db, VaultSession vault) : Controller
         var existingIds = existing.Select(x => x.ProjectId).ToHashSet();
         foreach (var pid in valid.Where(pid => !existingIds.Contains(pid)))
             db.SecretProjects.Add(new SecretProject { SecretId = id, ProjectId = pid });
+
+        await db.SaveChangesAsync(ct);
+        return NoContent();
+    }
+
+    [HttpPut("{id:guid}/environments")]
+    public async Task<IActionResult> SetEnvironments(Guid id, SetEnvironmentsRequest req, CancellationToken ct)
+    {
+        if (!await db.Secrets.AnyAsync(s => s.Id == id, ct)) return NotFound();
+
+        var desired = (req.EnvironmentIds ?? []).Distinct().ToHashSet();
+        var valid = (await db.Environments.Where(e => desired.Contains(e.Id))
+            .Select(e => e.Id).ToListAsync(ct)).ToHashSet();
+
+        var existing = await db.SecretEnvironments.Where(x => x.SecretId == id).ToListAsync(ct);
+        db.SecretEnvironments.RemoveRange(existing.Where(x => !valid.Contains(x.EnvironmentId)));
+
+        var existingIds = existing.Select(x => x.EnvironmentId).ToHashSet();
+        foreach (var eid in valid.Where(eid => !existingIds.Contains(eid)))
+            db.SecretEnvironments.Add(new SecretEnvironment { SecretId = id, EnvironmentId = eid });
 
         await db.SaveChangesAsync(ct);
         return NoContent();

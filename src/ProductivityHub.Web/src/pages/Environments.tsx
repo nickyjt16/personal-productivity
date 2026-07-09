@@ -194,6 +194,15 @@ function EnvCard({ env }: { env: Environment }) {
                 </a>
               ))}
             </div>
+
+            {env.secrets.length > 0 && (
+              <div className="small mt-2">
+                <span className="text-muted">🔑 Secrets: </span>
+                {env.secrets.map((s, i) => (
+                  <span key={s.id}>{i > 0 && ', '}{s.name}</span>
+                ))}
+              </div>
+            )}
           </>
         )}
 

@@ -108,6 +108,7 @@ public class Secret
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     [JsonIgnore] public List<SecretProject> ProjectLinks { get; set; } = [];
+    [JsonIgnore] public List<SecretEnvironment> EnvironmentLinks { get; set; } = [];
 }
 
 public enum EnvironmentType
@@ -137,6 +138,17 @@ public class PowerPlatformEnvironment
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public List<EnvironmentConfig> Configs { get; set; } = [];
+    [JsonIgnore] public List<SecretEnvironment> SecretLinks { get; set; } = [];
+}
+
+// Join entity — a secret (e.g. an app-registration client secret) can apply to
+// many environments and an environment can hold many secrets.
+public class SecretEnvironment
+{
+    public Guid SecretId { get; set; }
+    [JsonIgnore] public Secret? Secret { get; set; }
+    public Guid EnvironmentId { get; set; }
+    [JsonIgnore] public PowerPlatformEnvironment? Environment { get; set; }
 }
 
 public enum EnvConfigKind

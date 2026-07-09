@@ -30,7 +30,9 @@ public partial class SecretsView : UserControl
         List<Secret> secrets;
         await using (var db = Db.Context())
         {
-            secrets = await db.Secrets.Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+            secrets = await db.Secrets
+                .Include(s => s.ProjectLinks).ThenInclude(l => l.Project)
+                .Include(s => s.EnvironmentLinks).ThenInclude(l => l.Environment)
                 .OrderBy(s => s.ExpiresOn).ToListAsync();
             _configured = await VaultService.IsConfiguredAsync(db);
         }
@@ -42,6 +44,7 @@ public partial class SecretsView : UserControl
                 Id = s.Id, Name = s.Name, ClientId = s.ClientId, Value = shown, Locked = locked,
                 ExpiresOn = s.ExpiresOn, Notes = s.Notes, NotifyRaw = s.NotifyList, Link = s.Link,
                 ProjectTags = s.ProjectLinks.Count == 0 ? "" : "🏷 " + string.Join(", ", s.ProjectLinks.Select(l => l.Project!.Name)),
+                EnvTags = s.EnvironmentLinks.Count == 0 ? "" : "🌐 " + string.Join(", ", s.EnvironmentLinks.Select(l => l.Environment!.Name)),
             };
         }).ToList();
         UpdateLockUi();
@@ -196,6 +199,13 @@ public partial class SecretsView : UserControl
     {
         var row = (SecretRow)((FrameworkElement)sender).DataContext;
         var dlg = new ProjectAssignDialog("secret", row.Id) { Owner = Window.GetWindow(this) };
+        if (dlg.ShowDialog() == true) await LoadAsync();
+    }
+
+    private async void Environments_Click(object sender, RoutedEventArgs e)
+    {
+        var row = (SecretRow)((FrameworkElement)sender).DataContext;
+        var dlg = new SecretEnvironmentDialog(row.Id) { Owner = Window.GetWindow(this) };
         if (dlg.ShowDialog() == true) await LoadAsync();
     }
 

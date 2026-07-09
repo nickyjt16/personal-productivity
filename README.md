@@ -47,13 +47,14 @@ There are **two versions of the app and they share the same data**, so you can u
   and the project view shows progress across its items.
 - **🔑 Secrets** — track API keys, passwords, client secrets and their **expiry dates**. You get a
   warning a week before one expires (and again on the desktop app at launch). Each secret can have a
-  link to where it's managed and can be linked to projects. You must **set a master password before
-  adding secrets** — values are then encrypted with it (see "Your data" below).
+  link to where it's managed and can be linked to **projects** and **environments**. You must **set a
+  master password before adding secrets** — values are then encrypted with it (see "Your data" below).
 - **🌐 Environments** — for Power Platform / Dataverse work: record each environment's **name, type**
   (Dev/Test/UAT/Prod/…), **environment ID**, **org URL**, **tenant ID** and region. Each gets
   **quick-launch links** (maker portal, admin centre, open org, Dataverse Web API) built from those
   IDs, plus a **setup checklist** of the connection references and environment variables to set after
-  importing a solution — tick each off as you go.
+  importing a solution — tick each off as you go. **Secrets can be linked to environments**, so each
+  environment shows which secrets belong to it and each secret shows which environments it applies to.
 - **🍅 Pomodoro** — a focus timer with a floating, always-on-top mini window so it stays visible while
   you work in other apps.
 - **🔎 Search** — type in the search box and press **Enter** to search across everything.

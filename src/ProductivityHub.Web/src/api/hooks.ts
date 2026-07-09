@@ -331,6 +331,18 @@ export function useDeleteSecret() {
   })
 }
 
+export function useSetSecretEnvironments() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, environmentIds }: { id: string; environmentIds: string[] }) =>
+      api.put(`/api/secrets/${id}/environments`, { environmentIds }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['secrets'] })
+      qc.invalidateQueries({ queryKey: ['environments'] })
+    },
+  })
+}
+
 // ---------- Secret vault (master password) ----------
 export function useVaultStatus() {
   return useQuery({ queryKey: ['vault'], queryFn: () => api.get<VaultStatus>('/api/vault') })

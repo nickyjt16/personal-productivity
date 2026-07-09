@@ -20,4 +20,5 @@ public record BackupData(
     List<Secret>? Secrets = null,
     List<SecretProject>? SecretProjects = null,
     List<PowerPlatformEnvironment>? Environments = null,
-    List<EnvironmentConfig>? EnvironmentConfigs = null);
+    List<EnvironmentConfig>? EnvironmentConfigs = null,
+    List<SecretEnvironment>? SecretEnvironments = null);

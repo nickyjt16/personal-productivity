@@ -5,6 +5,7 @@ import {
   useLockVault,
   useSecrets,
   useSetItemProjects,
+  useSetSecretEnvironments,
   useSetVault,
   useUnlockVault,
   useUpdateSecret,
@@ -13,6 +14,12 @@ import {
 import type { Secret } from '../api/types'
 import ProjectBadges from '../components/ProjectBadges'
 import ProjectPicker from '../components/ProjectPicker'
+import EnvironmentPicker from '../components/EnvironmentPicker'
+
+const envTypeVariant: Record<string, string> = {
+  Dev: 'secondary', Test: 'info', UAT: 'warning', Prod: 'danger',
+  Default: 'primary', Sandbox: 'success', Other: 'light',
+}
 
 // Master-password bar: set a password on first use, unlock/lock thereafter.
 function VaultBar() {
@@ -119,6 +126,7 @@ export default function Secrets() {
   const update = useUpdateSecret()
   const remove = useDeleteSecret()
   const setProjects = useSetItemProjects('secrets')
+  const setEnvironments = useSetSecretEnvironments()
 
   const { data: vault } = useVaultStatus()
   const notConfigured = vault?.configured === false
@@ -132,13 +140,14 @@ export default function Secrets() {
   const [notify, setNotify] = useState('')
   const [link, setLink] = useState('')
   const [projectIds, setProjectIds] = useState<string[]>([])
+  const [envIds, setEnvIds] = useState<string[]>([])
   const [reveal, setReveal] = useState<Record<string, boolean>>({})
   const [saveError, setSaveError] = useState('')
   const [showAdd, setShowAdd] = useState(false)
 
   function reset() {
     setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn('')
-    setNotes(''); setNotify(''); setLink(''); setProjectIds([]); setShowAdd(false)
+    setNotes(''); setNotify(''); setLink(''); setProjectIds([]); setEnvIds([]); setShowAdd(false)
   }
 
   function save(e: React.FormEvent) {
@@ -154,12 +163,20 @@ export default function Secrets() {
       setSaveError(err instanceof Error ? err.message : 'Could not save the secret.')
     if (editingId) {
       update.mutate({ id: editingId, ...body }, {
-        onSuccess: () => { setProjects.mutate({ id: editingId, projectIds }); reset() },
+        onSuccess: () => {
+          setProjects.mutate({ id: editingId, projectIds })
+          setEnvironments.mutate({ id: editingId, environmentIds: envIds })
+          reset()
+        },
         onError,
       })
     } else {
       create.mutate(body, {
-        onSuccess: (s) => { setProjects.mutate({ id: s.id, projectIds }); reset() },
+        onSuccess: (s) => {
+          setProjects.mutate({ id: s.id, projectIds })
+          setEnvironments.mutate({ id: s.id, environmentIds: envIds })
+          reset()
+        },
         onError,
       })
     }
@@ -168,7 +185,8 @@ export default function Secrets() {
   function edit(s: Secret) {
     setEditingId(s.id); setName(s.name); setClientId(s.clientId ?? ''); setValue(s.value ?? '')
     setExpiresOn(s.expiresOn.slice(0, 10)); setNotes(s.notes ?? ''); setNotify(s.notify.join('\n'))
-    setLink(s.link ?? ''); setProjectIds(s.projects.map((p) => p.id)); setShowAdd(true)
+    setLink(s.link ?? ''); setProjectIds(s.projects.map((p) => p.id))
+    setEnvIds(s.environments.map((e) => e.id)); setShowAdd(true)
   }
 
   return (
@@ -233,6 +251,7 @@ export default function Secrets() {
             </button>
             {editingId && <button type="button" className="btn btn-outline-secondary" onClick={reset}>Cancel</button>}
             <ProjectPicker value={projectIds} onChange={setProjectIds} />
+            <EnvironmentPicker value={envIds} onChange={setEnvIds} />
           </div>
           {saveError && <div className="col-12 text-danger small">{saveError}</div>}
         </div>
@@ -277,6 +296,13 @@ export default function Secrets() {
                       </div>
                     )}
                     {s.projects.length > 0 && <div className="mt-1"><ProjectBadges projects={s.projects} /></div>}
+                    {s.environments.length > 0 && (
+                      <div className="mt-1 d-flex flex-wrap gap-1">
+                        {s.environments.map((e) => (
+                          <span key={e.id} className={`badge text-bg-${envTypeVariant[e.type] ?? 'light'}`}>🌐 {e.name}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <span className="badge text-bg-light text-muted">{new Date(s.expiresOn).toLocaleDateString()}</span>
                   <span className={`badge text-bg-${badge.variant}`}>{badge.label}</span>

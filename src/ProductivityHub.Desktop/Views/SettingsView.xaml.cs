@@ -126,7 +126,8 @@ public partial class SettingsView : UserControl
             await db.Secrets.AsNoTracking().ToListAsync(),
             SecretProjects: await db.SecretProjects.AsNoTracking().ToListAsync(),
             Environments: await db.Environments.AsNoTracking().ToListAsync(),
-            EnvironmentConfigs: await db.EnvironmentConfigs.AsNoTracking().ToListAsync());
+            EnvironmentConfigs: await db.EnvironmentConfigs.AsNoTracking().ToListAsync(),
+            SecretEnvironments: await db.SecretEnvironments.AsNoTracking().ToListAsync());
 
         await File.WriteAllTextAsync(dlg.FileName, JsonSerializer.Serialize(backup, Json));
         ShowStatus("Backup exported.");
@@ -157,6 +158,7 @@ public partial class SettingsView : UserControl
             await db.Notes.ExecuteDeleteAsync();
             await db.JournalEntries.ExecuteDeleteAsync();
             await db.SecretProjects.ExecuteDeleteAsync();
+            await db.SecretEnvironments.ExecuteDeleteAsync();
             await db.EnvironmentConfigs.ExecuteDeleteAsync();
             await db.Environments.ExecuteDeleteAsync();
             await db.Projects.ExecuteDeleteAsync();
@@ -167,6 +169,7 @@ public partial class SettingsView : UserControl
             db.SecretProjects.AddRange(backup.SecretProjects ?? []);
             db.Environments.AddRange(backup.Environments ?? []);
             db.EnvironmentConfigs.AddRange(backup.EnvironmentConfigs ?? []);
+            db.SecretEnvironments.AddRange(backup.SecretEnvironments ?? []);
             db.Todos.AddRange(backup.Todos ?? []);
             db.Notes.AddRange(backup.Notes ?? []);
             db.Bookmarks.AddRange(backup.Bookmarks ?? []);
@@ -192,6 +195,7 @@ public partial class SettingsView : UserControl
         await db.NoteProjects.ExecuteDeleteAsync();
         await db.BookmarkProjects.ExecuteDeleteAsync();
         await db.SecretProjects.ExecuteDeleteAsync();
+        await db.SecretEnvironments.ExecuteDeleteAsync();
         await db.EnvironmentConfigs.ExecuteDeleteAsync();
         await db.PomodoroSessions.ExecuteDeleteAsync();
         await db.Environments.ExecuteDeleteAsync();

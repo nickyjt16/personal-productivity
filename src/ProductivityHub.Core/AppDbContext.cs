@@ -17,6 +17,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<VaultConfig> VaultConfig => Set<VaultConfig>();
     public DbSet<PowerPlatformEnvironment> Environments => Set<PowerPlatformEnvironment>();
     public DbSet<EnvironmentConfig> EnvironmentConfigs => Set<EnvironmentConfig>();
+    public DbSet<SecretEnvironment> SecretEnvironments => Set<SecretEnvironment>();
     public DbSet<TodoProject> TodoProjects => Set<TodoProject>();
     public DbSet<NoteProject> NoteProjects => Set<NoteProject>();
     public DbSet<BookmarkProject> BookmarkProjects => Set<BookmarkProject>();
@@ -94,5 +95,16 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<EnvironmentConfig>()
             .HasOne(c => c.Environment).WithMany(e => e.Configs)
             .HasForeignKey(c => c.EnvironmentId).OnDelete(DeleteBehavior.Cascade);
+
+        // Many-to-many between secrets and environments; deleting either side
+        // removes the link row.
+        modelBuilder.Entity<SecretEnvironment>(e =>
+        {
+            e.HasKey(x => new { x.SecretId, x.EnvironmentId });
+            e.HasOne(x => x.Secret).WithMany(s => s.EnvironmentLinks)
+                .HasForeignKey(x => x.SecretId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Environment).WithMany(v => v.SecretLinks)
+                .HasForeignKey(x => x.EnvironmentId).OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }

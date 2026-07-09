@@ -86,6 +86,9 @@
                                             Visibility="{Binding HasDataverse, Converter={StaticResource BoolToVis}}" />
                                 </StackPanel>
 
+                                <TextBlock Text="{Binding SecretTags}" Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                           Visibility="{Binding HasSecrets, Converter={StaticResource BoolToVis}}" />
+
                                 <DockPanel Margin="0,8,0,0">
                                     <Button DockPanel.Dock="Right" Content="Manage checklist" Click="Checklist_Click" Padding="8,3" />
                                     <TextBlock Text="{Binding ConfigSummary}" Style="{StaticResource Muted}" VerticalAlignment="Center" />

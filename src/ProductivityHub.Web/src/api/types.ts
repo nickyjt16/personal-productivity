@@ -85,10 +85,17 @@ export interface Secret {
   notify: string[]
   link: string | null
   projects: ProjectRef[]
+  environments: SecretEnvRef[]
   daysLeft: number
   // A value is stored (hasValue) but may be hidden until the vault is unlocked (locked).
   hasValue: boolean
   locked: boolean
+}
+
+export interface SecretEnvRef {
+  id: string
+  name: string
+  type: EnvironmentType
 }
 
 export interface VaultStatus {
@@ -120,6 +127,7 @@ export interface Environment {
   region: string | null
   notes: string | null
   configs: EnvConfig[]
+  secrets: { id: string; name: string }[]
 }
 
 export interface PomodoroSession {

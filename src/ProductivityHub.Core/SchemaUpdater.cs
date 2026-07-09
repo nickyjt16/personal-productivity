@@ -108,6 +108,15 @@ public static class SchemaUpdater
                 CONSTRAINT "FK_EnvironmentConfigs_Environments_EnvironmentId" FOREIGN KEY ("EnvironmentId") REFERENCES "Environments" ("Id") ON DELETE CASCADE
             );
             CREATE INDEX IF NOT EXISTS "IX_EnvironmentConfigs_EnvironmentId" ON "EnvironmentConfigs" ("EnvironmentId");
+
+            CREATE TABLE IF NOT EXISTS "SecretEnvironments" (
+                "SecretId" TEXT NOT NULL,
+                "EnvironmentId" TEXT NOT NULL,
+                CONSTRAINT "PK_SecretEnvironments" PRIMARY KEY ("SecretId", "EnvironmentId"),
+                CONSTRAINT "FK_SecretEnvironments_Secrets_SecretId" FOREIGN KEY ("SecretId") REFERENCES "Secrets" ("Id") ON DELETE CASCADE,
+                CONSTRAINT "FK_SecretEnvironments_Environments_EnvironmentId" FOREIGN KEY ("EnvironmentId") REFERENCES "Environments" ("Id") ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS "IX_SecretEnvironments_EnvironmentId" ON "SecretEnvironments" ("EnvironmentId");
             """;
 
         await db.Database.ExecuteSqlRawAsync(sql, ct);

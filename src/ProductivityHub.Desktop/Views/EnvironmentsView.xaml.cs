@@ -21,13 +21,16 @@ public partial class EnvironmentsView : UserControl
     private async Task LoadAsync()
     {
         await using var db = Db.Context();
-        var envs = await db.Environments.Include(e => e.Configs)
+        var envs = await db.Environments
+            .Include(e => e.Configs)
+            .Include(e => e.SecretLinks).ThenInclude(l => l.Secret)
             .OrderBy(e => e.Type).ThenBy(e => e.Name).ToListAsync();
         ItemsHost.ItemsSource = envs.Select(e => new EnvRow
         {
             Id = e.Id, Name = e.Name, Type = e.Type, Region = e.Region,
             PpEnvironmentId = e.PpEnvironmentId, Url = e.Url, TenantId = e.TenantId, Notes = e.Notes,
             ConfigTotal = e.Configs.Count, ConfigSet = e.Configs.Count(c => c.IsSet),
+            SecretTags = e.SecretLinks.Count == 0 ? "" : "🔑 " + string.Join(", ", e.SecretLinks.Select(l => l.Secret!.Name)),
         }).ToList();
     }
 

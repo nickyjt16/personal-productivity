@@ -169,6 +169,9 @@ public class EnvRow
     public string ConfigSummary => ConfigTotal == 0
         ? "Setup checklist: none yet"
         : $"Setup checklist: {ConfigSet} of {ConfigTotal} set";
+
+    public string SecretTags { get; init; } = "";
+    public bool HasSecrets => SecretTags.Length > 0;
 }
 
 // Display wrapper for an environment config row (connection ref / env variable).
@@ -204,6 +207,8 @@ public class SecretRow
     public bool HasLink => !string.IsNullOrWhiteSpace(Link);
     public string ProjectTags { get; init; } = "";
     public bool HasProjects => ProjectTags.Length > 0;
+    public string EnvTags { get; init; } = "";
+    public bool HasEnvs => EnvTags.Length > 0;
     // A value is stored but the vault is locked, so it can't be shown.
     public bool Locked { get; init; }
     public string LockedNote => "🔒 Value hidden — unlock to view";

@@ -29,7 +29,8 @@ public class DataController(AppDbContext db) : ControllerBase
             Secrets: await db.Secrets.AsNoTracking().ToListAsync(ct),
             SecretProjects: await db.SecretProjects.AsNoTracking().ToListAsync(ct),
             Environments: await db.Environments.AsNoTracking().ToListAsync(ct),
-            EnvironmentConfigs: await db.EnvironmentConfigs.AsNoTracking().ToListAsync(ct));
+            EnvironmentConfigs: await db.EnvironmentConfigs.AsNoTracking().ToListAsync(ct),
+            SecretEnvironments: await db.SecretEnvironments.AsNoTracking().ToListAsync(ct));
         return Ok(backup);
     }
 
@@ -51,6 +52,7 @@ public class DataController(AppDbContext db) : ControllerBase
         await db.Notes.ExecuteDeleteAsync(ct);
         await db.JournalEntries.ExecuteDeleteAsync(ct);
         await db.SecretProjects.ExecuteDeleteAsync(ct);
+        await db.SecretEnvironments.ExecuteDeleteAsync(ct);
         await db.EnvironmentConfigs.ExecuteDeleteAsync(ct);
         await db.Environments.ExecuteDeleteAsync(ct);
         await db.Projects.ExecuteDeleteAsync(ct);
@@ -61,6 +63,7 @@ public class DataController(AppDbContext db) : ControllerBase
         db.SecretProjects.AddRange(data.SecretProjects ?? []);
         db.Environments.AddRange(data.Environments ?? []);
         db.EnvironmentConfigs.AddRange(data.EnvironmentConfigs ?? []);
+        db.SecretEnvironments.AddRange(data.SecretEnvironments ?? []);
         db.Todos.AddRange(data.Todos ?? []);
         db.Notes.AddRange(data.Notes ?? []);
         db.Bookmarks.AddRange(data.Bookmarks ?? []);
@@ -93,6 +96,7 @@ public class DataController(AppDbContext db) : ControllerBase
         await db.NoteProjects.ExecuteDeleteAsync(ct);
         await db.BookmarkProjects.ExecuteDeleteAsync(ct);
         await db.SecretProjects.ExecuteDeleteAsync(ct);
+        await db.SecretEnvironments.ExecuteDeleteAsync(ct);
         await db.EnvironmentConfigs.ExecuteDeleteAsync(ct);
         await db.PomodoroSessions.ExecuteDeleteAsync(ct);
 

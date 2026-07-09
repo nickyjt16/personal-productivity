@@ -139,6 +139,30 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Secret_can_be_linked_to_environments_both_ways()
+    {
+        var env = await (await _client.PostAsJsonAsync("/api/environments", new { name = "Prod", type = "Prod" }))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        var eid = Id(env);
+
+        // Secrets need a master password before they can be created.
+        await _client.PostAsJsonAsync("/api/vault/set", new { password = "pw12345" });
+        var secret = await (await _client.PostAsJsonAsync("/api/secrets",
+            new { name = "Prod app reg", expiresOn = "2027-01-01" })).Content.ReadFromJsonAsync<JsonElement>(Json);
+        var sid = Id(secret);
+
+        var link = await _client.PutAsJsonAsync($"/api/secrets/{sid}/environments", new { environmentIds = new[] { eid } });
+        Assert.Equal(HttpStatusCode.NoContent, link.StatusCode);
+
+        // Visible from the secret side…
+        var secrets = await GetArray("/api/secrets");
+        Assert.Equal("Prod", secrets[0].GetProperty("environments")[0].GetProperty("name").GetString());
+        // …and the environment side.
+        var envs = await GetArray("/api/environments");
+        Assert.Equal("Prod app reg", envs[0].GetProperty("secrets")[0].GetProperty("name").GetString());
+    }
+
+    [Fact]
     public async Task Clear_all_empties_every_section()
     {
         await _client.PostAsJsonAsync("/api/todos", new { title = "x" });
