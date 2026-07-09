@@ -22,7 +22,13 @@ public partial class App : Application
         DispatcherUnhandledException += (_, args) =>
         {
             Log(args.Exception);
-            MessageBox.Show(args.Exception.Message, "Productivity Hub — error");
+            // A known .NET 9 WPF regression throws from the tooltip popup timer on
+            // hover. It's harmless — swallow it silently rather than interrupting
+            // the user with an error dialog.
+            var stack = args.Exception.StackTrace ?? "";
+            var isToolTipGlitch = stack.Contains("PopupControlService") || stack.Contains("ShowToolTip");
+            if (!isToolTipGlitch)
+                MessageBox.Show(args.Exception.Message, "Productivity Hub — error");
             args.Handled = true;
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) => Log(args.ExceptionObject as Exception);

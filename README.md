@@ -114,8 +114,13 @@ Click the green **Code** button on the GitHub page → **Download ZIP**, then un
 Open **PowerShell**, go to the project folder, and run this one line:
 
 ```powershell
-dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
+
+This builds a **self-contained** app (~160 MB) that bundles everything it needs, so it launches by
+double-click without depending on any installed .NET runtime — the most reliable option. *(If you'd
+rather have a small ~7 MB download and you have the **.NET Desktop Runtime 9** installed, swap
+`--self-contained true` for `--self-contained false`.)*
 
 When it finishes, it prints where it put the app. The program is here:
 

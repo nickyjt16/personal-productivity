@@ -1,6 +1,7 @@
 # Creates a Desktop shortcut to the published WPF desktop app.
-# Publish first:
-#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+# Publish first (self-contained so it launches without depending on an installed
+# .NET Desktop Runtime — the most reliable option for a local double-click):
+#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 # Then run:
 #   powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1
 
