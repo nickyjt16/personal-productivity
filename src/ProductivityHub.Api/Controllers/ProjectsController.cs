@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using ProductivityHub.Core;
 using ProductivityHub.Core.Data;
 using ProductivityHub.Core.Data.Entities;
 
@@ -83,8 +84,13 @@ public class ProjectsController(AppDbContext db) : ControllerBase
         project.Name = req.Name.Trim();
         project.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
         if (!string.IsNullOrWhiteSpace(req.Color)) project.Color = req.Color!.Trim();
+        var becameArchived = req.Status == ProjectStatus.Archived && project.Status != ProjectStatus.Archived;
         if (req.Status.HasValue) project.Status = req.Status.Value;
         project.UpdatedAt = DateTimeOffset.UtcNow;
+
+        // Archiving a project archives its notes with it.
+        if (becameArchived)
+            await NoteArchive.ArchiveNotesForProjectAsync(db, id, ct);
 
         await db.SaveChangesAsync(ct);
         return Ok(await ToDto(project, ct));

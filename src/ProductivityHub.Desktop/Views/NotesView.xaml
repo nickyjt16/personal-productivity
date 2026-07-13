@@ -8,6 +8,8 @@
         </Grid.RowDefinitions>
         <DockPanel Grid.Row="0" Margin="0,0,0,4">
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                <CheckBox x:Name="ArchivedCheck" Content="Show archived" VerticalAlignment="Center"
+                          Margin="0,0,14,0" Click="ShowArchived_Changed" />
                 <TextBlock Text="Project:" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,6,0" />
                 <ComboBox x:Name="FilterCombo" Width="160" SelectedValuePath="Id" SelectionChanged="Filter_Changed" />
             </StackPanel>
@@ -44,6 +46,8 @@
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,8,0,0">
                         <Button Content="Save" Style="{StaticResource AccentButton}" Click="Save_Click" />
                         <Button Content="🏷 Projects" Click="Projects_Click" Margin="8,0,0,0" />
+                        <Button x:Name="ArchiveBtn" Content="Archive" Click="Archive_Click"
+                                Margin="8,0,0,0" Visibility="Collapsed" />
                         <Button x:Name="DeleteBtn" Content="Delete" Style="{StaticResource DangerButton}"
                                 Click="Delete_Click" Margin="8,0,0,0" Visibility="Collapsed" />
                     </StackPanel>

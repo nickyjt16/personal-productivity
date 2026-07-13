@@ -37,15 +37,16 @@ public partial class NotesView : UserControl
         await LoadListAsync();
         // If the note that was open no longer matches the filter, clear the
         // editor so a filtered-out note doesn't linger on screen.
-        var visible = (ListHost.ItemsSource as IEnumerable<NoteListRow>)?.Select(r => r.Id).ToHashSet() ?? [];
-        if (_selectedId is Guid id && !visible.Contains(id))
-            New_Click(this, new RoutedEventArgs());
+        ClearEditorIfHidden();
     }
+
+    private bool ShowArchived => ArchivedCheck.IsChecked == true;
 
     private async Task LoadListAsync()
     {
         await using var db = Db.Context();
-        var q = db.Notes.AsQueryable();
+        // Default view is open notes; the "Show archived" toggle browses the archive.
+        var q = db.Notes.Where(n => n.IsArchived == ShowArchived);
         if (_filterProjectId is Guid pid) q = q.Where(n => n.ProjectLinks.Any(l => l.ProjectId == pid));
         var notes = await q.OrderByDescending(n => n.UpdatedAt).ToListAsync();
         ListHost.ItemsSource = notes.Select(n => new NoteListRow
@@ -56,12 +57,27 @@ public partial class NotesView : UserControl
         }).ToList();
     }
 
+    private async void ShowArchived_Changed(object sender, RoutedEventArgs e)
+    {
+        await LoadListAsync();
+        ClearEditorIfHidden();
+    }
+
+    // Clears the editor when the open note is no longer in the visible list.
+    private void ClearEditorIfHidden()
+    {
+        var visible = (ListHost.ItemsSource as IEnumerable<NoteListRow>)?.Select(r => r.Id).ToHashSet() ?? [];
+        if (_selectedId is Guid id && !visible.Contains(id))
+            New_Click(this, new RoutedEventArgs());
+    }
+
     private void New_Click(object sender, RoutedEventArgs e)
     {
         _selectedId = null;
         TitleBox.Text = "";
         BodyBox.Text = "";
         DeleteBtn.Visibility = Visibility.Collapsed;
+        ArchiveBtn.Visibility = Visibility.Collapsed;
     }
 
     private async void Select_Click(object sender, RoutedEventArgs e)
@@ -74,6 +90,26 @@ public partial class NotesView : UserControl
         TitleBox.Text = note.Title ?? "";
         BodyBox.Text = note.Body;
         DeleteBtn.Visibility = Visibility.Visible;
+        ArchiveBtn.Visibility = Visibility.Visible;
+        ArchiveBtn.Content = note.IsArchived ? "Unarchive" : "Archive";
+    }
+
+    private async void Archive_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selectedId is not Guid id) return;
+        await using (var db = Db.Context())
+        {
+            var n = await db.Notes.FindAsync(id);
+            if (n != null)
+            {
+                n.IsArchived = !n.IsArchived;
+                n.ArchivedAt = n.IsArchived ? DateTimeOffset.UtcNow : null;
+                await db.SaveChangesAsync();
+            }
+        }
+        await LoadListAsync();
+        // The note just moved between open and archived, so it leaves this view.
+        ClearEditorIfHidden();
     }
 
     private async Task<Guid?> SaveInternalAsync()

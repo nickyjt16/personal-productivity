@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
-import { useCreateNote, useDeleteNote, useNotes, useSetItemProjects, useUpdateNote } from '../api/hooks'
+import { useCreateNote, useDeleteNote, useNotes, useSetItemProjects, useToggleNoteArchive, useUpdateNote } from '../api/hooks'
 import ProjectBadges from '../components/ProjectBadges'
 import ProjectFilter from '../components/ProjectFilter'
 import ProjectPicker from '../components/ProjectPicker'
 
 export default function Notes() {
   const [projectFilter, setProjectFilter] = useState('')
-  const { data: notes = [], isLoading } = useNotes(projectFilter || undefined)
+  const [showArchived, setShowArchived] = useState(false)
+  const { data: notes = [], isLoading } = useNotes(projectFilter || undefined, showArchived)
   const create = useCreateNote()
   const update = useUpdateNote()
   const remove = useDeleteNote()
+  const toggleArchive = useToggleNoteArchive()
   const setProjects = useSetItemProjects('notes')
 
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -52,7 +54,14 @@ export default function Notes() {
     <div>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="mb-0">📝 Notes</h2>
-        <ProjectFilter value={projectFilter} onChange={setProjectFilter} />
+        <div className="d-flex align-items-center gap-3">
+          <div className="form-check form-switch mb-0">
+            <input className="form-check-input" type="checkbox" id="showArchived"
+              checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} />
+            <label className="form-check-label small" htmlFor="showArchived">Show archived</label>
+          </div>
+          <ProjectFilter value={projectFilter} onChange={setProjectFilter} />
+        </div>
       </div>
       <div className="row g-3">
         <div className="col-md-4">
@@ -86,6 +95,12 @@ export default function Notes() {
             <div className="d-flex gap-2 mt-2">
               <button className="btn btn-primary" onClick={save}
                 disabled={create.isPending || update.isPending}>Save</button>
+              {selectedId && (
+                <button className="btn btn-outline-secondary" disabled={toggleArchive.isPending}
+                  onClick={() => { toggleArchive.mutate(selectedId); newNote() }}>
+                  {selected?.isArchived ? 'Unarchive' : 'Archive'}
+                </button>
+              )}
               {selectedId && (
                 <button className="btn btn-outline-danger"
                   onClick={() => { remove.mutate(selectedId); newNote() }}>Delete</button>

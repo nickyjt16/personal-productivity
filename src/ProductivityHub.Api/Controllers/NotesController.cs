@@ -10,21 +10,23 @@ namespace ProductivityHub.Api.Controllers;
 [Route("api/notes")]
 public class NotesController(AppDbContext db) : ControllerBase
 {
-    public record NoteDto(Guid Id, string? Title, string Body,
+    public record NoteDto(Guid Id, string? Title, string Body, bool IsArchived,
         DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, List<ProjectRef> Projects);
 
     public record SaveNoteRequest(string? Title, string Body);
 
     private static NoteDto ToDto(Note n) =>
-        new(n.Id, n.Title, n.Body, n.CreatedAt, n.UpdatedAt,
+        new(n.Id, n.Title, n.Body, n.IsArchived, n.CreatedAt, n.UpdatedAt,
             n.ProjectLinks.Select(l => l.Project!).Select(p => new ProjectRef(p.Id, p.Name, p.Color)).ToList());
 
+    // Defaults to open (non-archived) notes; pass archived=true to browse the archive.
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] Guid? projectId, CancellationToken ct)
+    public async Task<IActionResult> List([FromQuery] Guid? projectId, [FromQuery] bool archived = false,
+        CancellationToken ct = default)
     {
         var query = db.Notes
             .Include(n => n.ProjectLinks).ThenInclude(l => l.Project)
-            .AsQueryable();
+            .Where(n => n.IsArchived == archived);
         if (projectId is not null)
             query = query.Where(n => n.ProjectLinks.Any(l => l.ProjectId == projectId));
 
@@ -32,6 +34,18 @@ public class NotesController(AppDbContext db) : ControllerBase
             .OrderByDescending(n => n.UpdatedAt)
             .ToListAsync(ct);
         return Ok(items.Select(ToDto));
+    }
+
+    // Toggle a note between archived and open.
+    [HttpPost("{id:guid}/archive")]
+    public async Task<IActionResult> ToggleArchive(Guid id, CancellationToken ct)
+    {
+        var note = await db.Notes.FindAsync([id], ct);
+        if (note is null) return NotFound();
+        note.IsArchived = !note.IsArchived;
+        note.ArchivedAt = note.IsArchived ? DateTimeOffset.UtcNow : null;
+        await db.SaveChangesAsync(ct);
+        return Ok(ToDto(note));
     }
 
     [HttpGet("{id:guid}")]

@@ -163,6 +163,30 @@ public class ApiTests : IClassFixture<ApiFactory>
     }
 
     [Fact]
+    public async Task Archiving_a_project_archives_its_notes()
+    {
+        var project = await (await _client.PostAsJsonAsync("/api/projects", new { name = "Old proj" }))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        var pid = Id(project);
+        var note = await (await _client.PostAsJsonAsync("/api/notes", new { body = "keep for reference" }))
+            .Content.ReadFromJsonAsync<JsonElement>(Json);
+        var nid = Id(note);
+        await _client.PutAsJsonAsync($"/api/notes/{nid}/projects", new { projectIds = new[] { pid } });
+
+        // Archive the project — the linked note follows it into the archive.
+        await _client.PutAsJsonAsync($"/api/projects/{pid}", new { name = "Old proj", status = "Archived" });
+
+        Assert.Equal(0, (await GetArray("/api/notes")).GetArrayLength());               // default = open only
+        var archived = await GetArray("/api/notes?archived=true");
+        Assert.Equal(1, archived.GetArrayLength());
+        Assert.True(archived[0].GetProperty("isArchived").GetBoolean());
+
+        // Unarchive brings it back to the default view.
+        await _client.PostAsync($"/api/notes/{nid}/archive", null);
+        Assert.Equal(1, (await GetArray("/api/notes")).GetArrayLength());
+    }
+
+    [Fact]
     public async Task Clear_all_empties_every_section()
     {
         await _client.PostAsJsonAsync("/api/todos", new { title = "x" });

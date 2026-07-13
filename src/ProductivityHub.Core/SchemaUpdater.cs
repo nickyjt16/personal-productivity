@@ -126,6 +126,8 @@ public static class SchemaUpdater
         await AddColumnIfMissingAsync(db, "Secrets", "Link", "TEXT", ct);
         await AddColumnIfMissingAsync(db, "Todos", "RecurUnit", "INTEGER NOT NULL DEFAULT 0", ct);
         await AddColumnIfMissingAsync(db, "Todos", "RecurInterval", "INTEGER NOT NULL DEFAULT 0", ct);
+        await AddColumnIfMissingAsync(db, "Notes", "IsArchived", "INTEGER NOT NULL DEFAULT 0", ct);
+        await AddColumnIfMissingAsync(db, "Notes", "ArchivedAt", "INTEGER NULL", ct);
     }
 
     // Idempotent ALTER TABLE ADD COLUMN — SQLite can't do "IF NOT EXISTS" for

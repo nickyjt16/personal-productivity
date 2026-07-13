@@ -61,6 +61,7 @@ export interface Note {
   id: string
   title: string | null
   body: string
+  isArchived: boolean
   createdAt: string
   updatedAt: string
   projects: ProjectRef[]

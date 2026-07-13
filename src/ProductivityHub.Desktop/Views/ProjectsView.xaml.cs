@@ -271,7 +271,15 @@ public partial class ProjectsView : UserControl
         await using (var db = Db.Context())
         {
             var p = await db.Projects.FindAsync(id);
-            if (p != null) { p.Status = status; p.UpdatedAt = DateTimeOffset.UtcNow; await db.SaveChangesAsync(); }
+            if (p != null)
+            {
+                // Archiving a project archives its notes with it.
+                if (status == ProjectStatus.Archived && p.Status != ProjectStatus.Archived)
+                    await Core.NoteArchive.ArchiveNotesForProjectAsync(db, id);
+                p.Status = status;
+                p.UpdatedAt = DateTimeOffset.UtcNow;
+                await db.SaveChangesAsync();
+            }
         }
         await LoadCardsAsync();
         // If the project left the current filter, hide detail; otherwise refresh it.

@@ -177,10 +177,18 @@ export function useImportLinks() {
 }
 
 // ---------- Notes ----------
-export function useNotes(projectId?: string) {
+export function useNotes(projectId?: string, archived?: boolean) {
   return useQuery({
-    queryKey: ['notes', projectId],
-    queryFn: () => api.get<Note[]>(`/api/notes${qs({ projectId })}`),
+    queryKey: ['notes', projectId, archived ?? false],
+    queryFn: () => api.get<Note[]>(`/api/notes${qs({ projectId, archived })}`),
+  })
+}
+
+export function useToggleNoteArchive() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => api.post<Note>(`/api/notes/${id}/archive`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notes'] }),
   })
 }
 
@@ -276,7 +284,11 @@ export function useUpdateProject() {
     mutationFn: ({ id, ...body }: {
       id: string; name: string; description?: string | null; color?: string; status?: ProjectStatus
     }) => api.put<Project>(`/api/projects/${id}`, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['projects'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['projects'] })
+      // Archiving a project archives its notes server-side.
+      qc.invalidateQueries({ queryKey: ['notes'] })
+    },
   })
 }
 
