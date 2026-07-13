@@ -114,14 +114,18 @@ Click the green **Code** button on the GitHub page → **Download ZIP**, then un
 Open **PowerShell**, go to the project folder, and run this one line:
 
 ```powershell
-dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false
+dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true
 ```
 
-This is a **multi-file** build (a folder of DLLs next to the exe). Avoid `-p:PublishSingleFile=true`
-on **corporate/managed PCs** — single-file bundles extract executables to a temp folder at runtime,
-which Microsoft Defender **Attack Surface Reduction** rules often block repeatedly (see the note
-below). It needs the **.NET Desktop Runtime 9** (Step 1); add `--self-contained true` for a
-runtime-free build (still multi-file, just larger).
+This is a **self-contained, multi-file** build (a folder of files including the app's own copy of
+.NET, so it needs nothing installed). **Do not** add `-p:PublishSingleFile=true` on **corporate /
+managed PCs** — single-file bundles extract executables (including the native `e_sqlite3.dll` that
+SQLite needs) to a temp folder at runtime, which Microsoft Defender **Attack Surface Reduction** rules
+block repeatedly (see the note below), causing a *"Failed to open the database"* error and constant
+"blocked by IT" prompts. *(If you have the **.NET Desktop Runtime 9** installed and want a tiny build,
+use `--self-contained false` — still multi-file.)*
+
+Keep the whole `publish` folder together; the exe needs the files next to it.
 
 When it finishes, it prints where it put the app. The program is here:
 
@@ -155,9 +159,10 @@ unsigned. To get past it (any one of these):
   ```
   The `create-desktop-app-shortcut.ps1` script does this automatically.
 
-The downloadable release `.exe` is **framework-dependent** (it needs the .NET Desktop Runtime from
-Step 1). That keeps it small and makes antivirus false positives far less likely than a large
-all-in-one build.
+The downloadable release is a **zip of a self-contained, multi-file build** — download it, right-click
+→ **Properties → Unblock**, **Extract All**, then run `ProductivityHub.Desktop.exe` from the folder.
+It's a folder (not a bare `.exe`) on purpose: the native `e_sqlite3.dll` must sit next to the exe, and
+a single-file `.exe` would extract it to a temp folder that corporate Defender blocks.
 
 ### "Blocked by your IT administrator" (corporate / managed PCs)
 

@@ -5,10 +5,11 @@
 # Microsoft Defender ASR rules (e.g. "block untrusted/low-prevalence
 # executables") flag repeatedly — causing "blocked by your IT administrator"
 # prompts every few minutes. A multi-file build loads its DLLs in place, so
-# nothing executable is written to temp:
-#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained false
-# (needs the .NET Desktop Runtime 9 installed; add --self-contained true for a
-#  runtime-free build — still multi-file, just larger.)
+# nothing executable (incl. the native e_sqlite3.dll) is written to temp:
+#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true
+# --self-contained true also removes the need for an installed .NET runtime.
+# Use --self-contained false for a tiny build if the .NET Desktop Runtime 9 is
+# installed. NEVER add -p:PublishSingleFile=true on a managed PC.
 # Then run:
 #   powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1
 
