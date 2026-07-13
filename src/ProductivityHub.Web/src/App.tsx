@@ -37,7 +37,7 @@ export default function App() {
       </aside>
 
       <main className="flex-grow-1 bg-body-tertiary p-4" style={{ overflowY: 'auto' }}>
-        <div className="container-fluid" style={{ maxWidth: 960 }}>
+        <div className="container-fluid" style={{ maxWidth: 1440 }}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/todos" element={<Todos />} />

@@ -51,10 +51,14 @@ public partial class ProjectAssignDialog : Window
         List.Children.Clear();
         foreach (var p in open.Concat(linkedClosed).DistinctBy(p => p.Id).OrderBy(p => p.Name))
         {
+            // Only open (New/Active) projects are selectable; already-linked closed
+            // ones are shown for context but greyed out.
+            var isOpen = p.Status == ProjectStatus.New || p.Status == ProjectStatus.Active;
             List.Children.Add(new CheckBox
             {
-                Content = p.Name,
+                Content = isOpen ? p.Name : $"{p.Name}  ({p.Status})",
                 IsChecked = linkedIds.Contains(p.Id),
+                IsEnabled = isOpen,
                 Tag = p.Id,
                 Margin = new Thickness(0, 4, 0, 4),
             });

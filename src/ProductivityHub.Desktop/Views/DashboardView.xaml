@@ -5,36 +5,40 @@
         <StackPanel Margin="20">
             <TextBlock x:Name="Greeting" Style="{StaticResource Heading}" />
 
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0" Cursor="Hand"
+            <UniformGrid Rows="1" Margin="0,0,0,14">
+                <Border Style="{StaticResource Card}" Margin="0,0,12,0" Cursor="Hand"
                         Tag="todos" MouseLeftButtonUp="Card_Click" ToolTip="Go to Todos">
                     <StackPanel>
-                        <TextBlock x:Name="OpenCount" FontSize="26" FontWeight="Bold" />
+                        <TextBlock x:Name="OpenCount" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentBrush}" />
                         <TextBlock Text="Open tasks" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0" Cursor="Hand"
+                <Border Style="{StaticResource Card}" Margin="0,0,12,0" Cursor="Hand"
                         Tag="inbox" MouseLeftButtonUp="Card_Click" ToolTip="Go to Inbox">
                     <StackPanel>
-                        <TextBlock x:Name="InboxCount" FontSize="26" FontWeight="Bold" />
+                        <TextBlock x:Name="InboxCount" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentBrush}" />
                         <TextBlock Text="To triage" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Width="150" Margin="0,0,10,0" Cursor="Hand"
+                <Border Style="{StaticResource Card}" Margin="0,0,12,0" Cursor="Hand"
                         Tag="bookmarks" MouseLeftButtonUp="Card_Click" ToolTip="Go to Bookmarks">
                     <StackPanel>
-                        <TextBlock x:Name="UnreadCount" FontSize="26" FontWeight="Bold" />
+                        <TextBlock x:Name="UnreadCount" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentBrush}" />
                         <TextBlock Text="Unread links" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource Card}" Width="150" Cursor="Hand"
+                <Border Style="{StaticResource Card}" Cursor="Hand"
                         Tag="secrets" MouseLeftButtonUp="Card_Click" ToolTip="Go to Secrets">
                     <StackPanel>
-                        <TextBlock x:Name="ExpiringCount" FontSize="26" FontWeight="Bold" />
+                        <TextBlock x:Name="ExpiringCount" FontSize="30" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentBrush}" />
                         <TextBlock Text="Secrets expiring (7d)" Style="{StaticResource Muted}" />
                     </StackPanel>
                 </Border>
-            </StackPanel>
+            </UniformGrid>
 
             <Border Style="{StaticResource Card}">
                 <StackPanel>

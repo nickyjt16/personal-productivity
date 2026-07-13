@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   useCreateSecret,
   useDeleteSecret,
@@ -149,6 +149,14 @@ export default function Secrets() {
     setEditingId(null); setName(''); setClientId(''); setValue(''); setExpiresOn('')
     setNotes(''); setNotify(''); setLink(''); setProjectIds([]); setEnvIds([]); setShowAdd(false)
   }
+
+  // Locking the vault must hide everything immediately — including a value in
+  // the edit form or ones revealed in the list.
+  const unlocked = vault?.unlocked === true
+  useEffect(() => {
+    if (!unlocked) { reset(); setReveal({}) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [unlocked])
 
   function save(e: React.FormEvent) {
     e.preventDefault()

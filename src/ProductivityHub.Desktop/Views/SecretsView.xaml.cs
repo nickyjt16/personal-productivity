@@ -86,9 +86,16 @@ public partial class SecretsView : UserControl
     private async void LockToggle_Click(object sender, RoutedEventArgs e)
     {
         if (App.VaultUnlocked)
+        {
             App.LockVault();
+            // Locking must hide everything immediately, including a value sitting
+            // in the add/edit form — otherwise the open secret stays exposed.
+            Reset();
+        }
         else
+        {
             await App.SetupOrUnlockVaultAsync(Window.GetWindow(this));
+        }
         await LoadAsync();
     }
 

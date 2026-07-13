@@ -23,9 +23,10 @@ export default function ProjectPicker({
   const [newName, setNewName] = useState('')
 
   // Union of open projects and any already-selected (possibly closed) ones.
-  const known = new Map<string, { id: string; name: string; color: string }>()
-  for (const p of openProjects) known.set(p.id, { id: p.id, name: p.name, color: p.color })
-  for (const p of current) if (!known.has(p.id)) known.set(p.id, p)
+  // Only open projects are selectable; closed ones show greyed out for context.
+  const known = new Map<string, { id: string; name: string; color: string; open: boolean }>()
+  for (const p of openProjects) known.set(p.id, { id: p.id, name: p.name, color: p.color, open: true })
+  for (const p of current) if (!known.has(p.id)) known.set(p.id, { ...p, open: false })
   const options = [...known.values()].sort((a, b) => a.name.localeCompare(b.name))
 
   function toggle(id: string) {
@@ -57,12 +58,14 @@ export default function ProjectPicker({
             {options.length === 0 && <div className="text-muted small px-1 mb-1">No projects yet.</div>}
             <div style={{ maxHeight: 220, overflowY: 'auto' }}>
               {options.map((p) => (
-                <label key={p.id} className="d-flex align-items-center gap-2 px-1 py-1" style={{ cursor: 'pointer' }}>
-                  <input type="checkbox" className="form-check-input mt-0"
+                <label key={p.id} className="d-flex align-items-center gap-2 px-1 py-1"
+                  style={{ cursor: p.open ? 'pointer' : 'not-allowed', opacity: p.open ? 1 : 0.5 }}>
+                  <input type="checkbox" className="form-check-input mt-0" disabled={!p.open}
                     checked={value.includes(p.id)} onChange={() => toggle(p.id)} />
                   <span className="badge rounded-pill" style={{ backgroundColor: p.color, color: '#fff' }}>
                     {p.name}
                   </span>
+                  {!p.open && <span className="small text-muted">closed</span>}
                 </label>
               ))}
             </div>

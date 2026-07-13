@@ -21,22 +21,31 @@
 
         <Border x:Name="AddCard" Grid.Row="1" Style="{StaticResource Card}" Margin="0,0,0,12" Visibility="Collapsed">
             <StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <TextBox x:Name="TitleBox" Width="340" Tag="What needs doing?" />
-                    <ComboBox x:Name="PriorityBox" Width="110" Margin="8,0,0,0" />
-                    <DatePicker x:Name="DueBox" Width="130" Margin="8,0,0,0" />
-                    <ComboBox x:Name="RepeatCombo" Width="110" Margin="8,0,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" x:Name="TitleBox" Tag="What needs doing?" />
+                    <ComboBox Grid.Column="1" x:Name="PriorityBox" Width="110" Margin="8,0,0,0" />
+                    <DatePicker Grid.Column="2" x:Name="DueBox" Width="130" Margin="8,0,0,0" />
+                    <ComboBox Grid.Column="3" x:Name="RepeatCombo" Width="110" Margin="8,0,0,0">
                         <ComboBoxItem Content="No repeat" Tag="None" IsSelected="True" />
                         <ComboBoxItem Content="Daily" Tag="Day" />
                         <ComboBoxItem Content="Weekly" Tag="Week" />
                         <ComboBoxItem Content="Monthly" Tag="Month" />
                     </ComboBox>
-                    <Button x:Name="AddBtn" Content="Add" Style="{StaticResource AccentButton}"
+                    <Button Grid.Column="4" x:Name="AddBtn" Content="Add" Style="{StaticResource AccentButton}"
                             Click="Add_Click" Margin="8,0,0,0" />
-                    <Button x:Name="PickProjectsBtn" Content="🏷 Projects" Click="PickProjects_Click" Margin="8,0,0,0" />
-                    <Button x:Name="CancelBtn" Content="Cancel" Click="CancelEdit_Click"
+                    <Button Grid.Column="5" x:Name="PickProjectsBtn" Content="🏷 Projects" Click="PickProjects_Click" Margin="8,0,0,0" />
+                    <Button Grid.Column="6" x:Name="CancelBtn" Content="Cancel" Click="CancelEdit_Click"
                             Margin="8,0,0,0" Visibility="Collapsed" />
-                </StackPanel>
+                </Grid>
                 <TextBox x:Name="NotesBox" Margin="0,8,0,0" Height="44" TextWrapping="Wrap"
                          AcceptsReturn="True" VerticalContentAlignment="Top" Tag="Notes (optional)" />
             </StackPanel>

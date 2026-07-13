@@ -30,10 +30,16 @@ public partial class NotesView : UserControl
         FilterCombo.SelectedIndex = 0;
     }
 
-    private void Filter_Changed(object sender, SelectionChangedEventArgs e)
+    private async void Filter_Changed(object sender, SelectionChangedEventArgs e)
     {
         _filterProjectId = FilterCombo.SelectedValue as Guid?;
-        if (IsLoaded) _ = LoadListAsync();
+        if (!IsLoaded) return;
+        await LoadListAsync();
+        // If the note that was open no longer matches the filter, clear the
+        // editor so a filtered-out note doesn't linger on screen.
+        var visible = (ListHost.ItemsSource as IEnumerable<NoteListRow>)?.Select(r => r.Id).ToHashSet() ?? [];
+        if (_selectedId is Guid id && !visible.Contains(id))
+            New_Click(this, new RoutedEventArgs());
     }
 
     private async Task LoadListAsync()
