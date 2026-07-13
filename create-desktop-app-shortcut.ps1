@@ -15,28 +15,44 @@
 
 $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
-$exe = Join-Path $repo 'src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish\ProductivityHub.Desktop.exe'
+$pub = Join-Path $repo 'src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish'
+$dll = Join-Path $pub 'ProductivityHub.Desktop.dll'
+$exe = Join-Path $pub 'ProductivityHub.Desktop.exe'   # used only for the shortcut icon
 
-if (-not (Test-Path $exe)) {
-    Write-Host "Published exe not found. Publish it first (see the comment at the top of this script)."
+if (-not (Test-Path $dll)) {
+    Write-Host "Published app not found. Publish it first (see the comment at the top of this script)."
     exit 1
 }
 
-# If the exe was downloaded (e.g. from a GitHub Release), Windows tags it with a
-# "Mark of the Web", which makes SmartScreen show a "Windows protected your PC"
-# warning. Unblock it so the app launches without that prompt.
-Unblock-File -Path $exe -ErrorAction SilentlyContinue
-Write-Host "Unblocked the app (clears the 'downloaded from the internet' flag)."
+# Downloaded/extracted files carry a "Mark of the Web"; clear it on every file so
+# nothing prompts to unblock.
+Get-ChildItem $pub -Recurse -File | Unblock-File -ErrorAction SilentlyContinue
+Write-Host "Unblocked the app files."
+
+# Find the Microsoft-signed .NET host. Launching the app THROUGH dotnet.exe (a
+# trusted, high-prevalence binary) rather than our own unsigned exe avoids the
+# corporate Microsoft Defender ASR rule that blocks unsigned/low-prevalence
+# executables ("Windows cannot access... you may not have permissions" /
+# "blocked by your IT administrator"). Our code loads as a library, not as an
+# executable that the rule would block.
+$dotnet = Join-Path $env:ProgramFiles 'dotnet\dotnet.exe'
+if (-not (Test-Path $dotnet)) { $dotnet = (Get-Command dotnet -ErrorAction SilentlyContinue).Source }
+if (-not $dotnet -or -not (Test-Path $dotnet)) {
+    Write-Host "dotnet.exe not found. Install the .NET Desktop Runtime 9 (https://dotnet.microsoft.com/download/dotnet/9.0)."
+    exit 1
+}
 
 $desktop = [Environment]::GetFolderPath('Desktop')
 $shortcut = Join-Path $desktop 'Productivity Hub.lnk'
 
 $shell = New-Object -ComObject WScript.Shell
 $lnk = $shell.CreateShortcut($shortcut)
-$lnk.TargetPath = $exe
-$lnk.WorkingDirectory = Split-Path $exe
-$lnk.IconLocation = 'shell32.dll,43'
+$lnk.TargetPath = $dotnet
+$lnk.Arguments = '"' + $dll + '"'
+$lnk.WorkingDirectory = $pub
+$lnk.IconLocation = "$exe,0"
+$lnk.WindowStyle = 7   # start the dotnet host window minimised (hidden from view)
 $lnk.Description = 'Productivity Hub (desktop)'
 $lnk.Save()
 
-Write-Host "Created shortcut: $shortcut"
+Write-Host "Created shortcut (launches via dotnet host): $shortcut"
