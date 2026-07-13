@@ -5,17 +5,20 @@
 # Microsoft Defender ASR rules (e.g. "block untrusted/low-prevalence
 # executables") flag repeatedly — causing "blocked by your IT administrator"
 # prompts every few minutes. A multi-file build loads its DLLs in place, so
-# nothing executable (incl. the native e_sqlite3.dll) is written to temp:
-#   dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true
-# --self-contained true also removes the need for an installed .NET runtime.
-# Use --self-contained false for a tiny build if the .NET Desktop Runtime 9 is
-# installed. NEVER add -p:PublishSingleFile=true on a managed PC.
+# nothing executable (incl. the native e_sqlite3.dll) is written to temp.
+# Publish PORTABLE (no -r): native libs land under runtimes\<rid>\native and are
+# resolved via deps.json, which the shared dotnet host (used below) loads
+# correctly. A -r win-x64 build flattens e_sqlite3.dll and the shared host then
+# can't find it ("Unable to load DLL 'e_sqlite3'"):
+#   dotnet publish src\ProductivityHub.Desktop -c Release
+# (needs the .NET Desktop Runtime 9 installed. NEVER add -p:PublishSingleFile=true
+#  on a managed PC.)
 # Then run:
 #   powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1
 
 $ErrorActionPreference = 'Stop'
 $repo = $PSScriptRoot
-$pub = Join-Path $repo 'src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish'
+$pub = Join-Path $repo 'src\ProductivityHub.Desktop\bin\Release\net9.0-windows\publish'
 $dll = Join-Path $pub 'ProductivityHub.Desktop.dll'
 $exe = Join-Path $pub 'ProductivityHub.Desktop.exe'   # used only for the shortcut icon
 

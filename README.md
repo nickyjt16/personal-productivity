@@ -114,34 +114,31 @@ Click the green **Code** button on the GitHub page → **Download ZIP**, then un
 Open **PowerShell**, go to the project folder, and run this one line:
 
 ```powershell
-dotnet publish src\ProductivityHub.Desktop -c Release -r win-x64 --self-contained true
+dotnet publish src\ProductivityHub.Desktop -c Release
 ```
 
-This is a **self-contained, multi-file** build (a folder of files including the app's own copy of
-.NET, so it needs nothing installed). **Do not** add `-p:PublishSingleFile=true` on **corporate /
-managed PCs** — single-file bundles extract executables (including the native `e_sqlite3.dll` that
-SQLite needs) to a temp folder at runtime, which Microsoft Defender **Attack Surface Reduction** rules
-block repeatedly (see the note below), causing a *"Failed to open the database"* error and constant
-"blocked by IT" prompts. *(If you have the **.NET Desktop Runtime 9** installed and want a tiny build,
-use `--self-contained false` — still multi-file.)*
+This is a **portable, multi-file** build. Two important don'ts on **corporate / managed PCs**:
+`-p:PublishSingleFile=true` extracts executables to a temp folder that Defender **ASR** blocks, and
+`-r win-x64` flattens the native `e_sqlite3.dll` where the shared .NET host can't find it (→ *"Failed
+to open the database / Unable to load DLL 'e_sqlite3'"*). The plain command above avoids both — native
+libs go under `runtimes\win-x64\native\` and resolve via `deps.json`. It needs the **.NET Desktop
+Runtime 9** (Step 1). Keep the whole `publish` folder together.
 
-Keep the whole `publish` folder together; the exe needs the files next to it.
-
-When it finishes, it prints where it put the app. The program is here:
+Output folder:
 
 ```
-src\ProductivityHub.Desktop\bin\Release\net9.0-windows\win-x64\publish\ProductivityHub.Desktop.exe
+src\ProductivityHub.Desktop\bin\Release\net9.0-windows\publish\
 ```
 
 ### Step 4 — run it
 
-**Double-click `ProductivityHub.Desktop.exe`.** That's it — the app opens in a window, no server, no
-browser. (Optional: run `powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1`
-to put a shortcut on your Desktop — the script also unblocks the app for you, see below.)
+Run `powershell -ExecutionPolicy Bypass -File .\create-desktop-app-shortcut.ps1` to put a **Desktop
+shortcut** there. Launch the app from that shortcut — it starts through Microsoft's signed `dotnet`
+host, which corporate Defender allows (running the unsigned `.exe` directly is blocked by ASR on
+managed PCs). The script also unblocks the files for you.
 
-> **Tip for sharing with someone who isn't technical:** add `--self-contained true` to the Step 3
-> command. That makes a bigger file that includes everything, so they can just double-click it
-> **without installing .NET first**.
+> On a personal (unmanaged) PC you can just double-click `ProductivityHub.Desktop.exe` in the `publish`
+> folder. On a managed PC, use the shortcut (or the `Launch Productivity Hub.cmd` in a release zip).
 
 ### About the "Windows protected your PC" warning
 
@@ -159,10 +156,11 @@ unsigned. To get past it (any one of these):
   ```
   The `create-desktop-app-shortcut.ps1` script does this automatically.
 
-The downloadable release is a **zip of a self-contained, multi-file build** — download it, right-click
-→ **Properties → Unblock**, **Extract All**, then run `ProductivityHub.Desktop.exe` from the folder.
-It's a folder (not a bare `.exe`) on purpose: the native `e_sqlite3.dll` must sit next to the exe, and
-a single-file `.exe` would extract it to a temp folder that corporate Defender blocks.
+The downloadable release is a **zip of a portable, multi-file build**. Download it, right-click →
+**Properties → Unblock**, **Extract All**, then double-click **`Launch Productivity Hub.cmd`** (needs
+the .NET Desktop Runtime 9). It's a folder with a launcher — not a bare `.exe` — on purpose: the native
+`e_sqlite3.dll` must be resolvable on disk, and the launcher starts the app via the signed `dotnet`
+host so corporate Defender doesn't block it.
 
 ### "Blocked by your IT administrator" (corporate / managed PCs)
 
